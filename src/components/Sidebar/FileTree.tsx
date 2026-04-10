@@ -13,6 +13,7 @@ const FileItemComponent: React.FC<{
   const [expanded, setExpanded] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(item.name);
+  const [hovered, setHovered] = useState(false);
   const isActive = item.id === activeFileId;
 
   const handleDoubleClick = () => {
@@ -29,19 +30,23 @@ const FileItemComponent: React.FC<{
     <div>
       <div
         style={{
-          padding: '4px 8px', paddingLeft: depth * 16 + 8, cursor: 'pointer',
-          backgroundColor: isActive ? '#e8f5e9' : 'transparent', display: 'flex',
-          alignItems: 'center', fontSize: 13, color: '#333', gap: 4,
+          padding: '5px 8px', paddingLeft: depth * 16 + 8, cursor: 'pointer',
+          backgroundColor: isActive ? '#e8f5e9' : hovered ? '#f0f0f0' : 'transparent',
+          display: 'flex', alignItems: 'center', fontSize: 13, color: isActive ? '#2e7d32' : '#333',
+          gap: 6, borderLeft: isActive ? '3px solid #35b378' : '3px solid transparent',
+          transition: 'background-color 0.15s, border-color 0.15s',
         }}
         onClick={() => item.type === 'file' ? onSelect(item.id) : setExpanded(!expanded)}
         onDoubleClick={handleDoubleClick}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         onContextMenu={(e) => {
           e.preventDefault();
           if (confirm(`删除 "${item.name}"？`)) onDelete(item.id);
         }}
       >
-        <span style={{ color: '#999', fontSize: 12 }}>
-          {item.type === 'folder' ? (expanded ? '\u{25BC}' : '\u{25B6}') : '\u{25CB}'}
+        <span style={{ color: isActive ? '#35b378' : '#999', fontSize: 12, width: 14, textAlign: 'center', flexShrink: 0 }}>
+          {item.type === 'folder' ? (expanded ? '\u{25BC}' : '\u{25B6}') : '\u{1F4C4}'}
         </span>
         {editing ? (
           <input
@@ -54,7 +59,7 @@ const FileItemComponent: React.FC<{
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: isActive ? 500 : 400 }}>{item.name}</span>
         )}
       </div>
       {item.type === 'folder' && expanded && item.children?.map((child) => (

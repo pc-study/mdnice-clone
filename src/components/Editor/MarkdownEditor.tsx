@@ -27,6 +27,23 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({ onScroll, editor
   const viewRef = useRef<EditorView | null>(null);
   const { content, setContent, fontSize, wordWrap } = useEditorStore();
 
+  const insertTextAtCursor = (view: EditorView, text: string) => {
+    const cursor = view.state.selection.main.head;
+    view.dispatch({
+      changes: { from: cursor, insert: text },
+      selection: { anchor: cursor + text.length },
+    });
+  };
+
+  const handleImageFile = (file: File, view: EditorView) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      insertTextAtCursor(view, `![${file.name}](${dataUrl})`);
+    };
+    reader.readAsDataURL(file);
+  };
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -45,6 +62,31 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({ onScroll, editor
             scrollHeight: dom.scrollHeight,
             clientHeight: dom.clientHeight,
           });
+        }
+        return false;
+      },
+      paste: (event: ClipboardEvent, view) => {
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) {
+            event.preventDefault();
+            const file = items[i].getAsFile();
+            if (file) handleImageFile(file, view);
+            return true;
+          }
+        }
+        return false;
+      },
+      drop: (event: DragEvent, view) => {
+        const files = event.dataTransfer?.files;
+        if (!files || files.length === 0) return false;
+        for (let i = 0; i < files.length; i++) {
+          if (files[i].type.startsWith('image/')) {
+            event.preventDefault();
+            handleImageFile(files[i], view);
+            return true;
+          }
         }
         return false;
       },

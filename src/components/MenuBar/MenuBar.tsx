@@ -28,9 +28,12 @@ interface MenuBarProps {
   onToast?: (msg: string) => void;
   previewRef?: React.RefObject<HTMLDivElement | null>;
   editorViewRef?: React.MutableRefObject<EditorView | null>;
+  onShowMarkdownHelp?: () => void;
+  onShowShortcuts?: () => void;
+  onShowAbout?: () => void;
 }
 
-export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorViewRef }) => {
+export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorViewRef, onShowMarkdownHelp, onShowShortcuts, onShowAbout }) => {
   const { content, setContent, viewMode, setViewMode, fontSize, setFontSize, lineHeight, setLineHeight, wordWrap, setWordWrap } = useEditorStore();
   const { currentTheme, setCurrentTheme, currentCodeTheme, setCurrentCodeTheme } = useThemeStore();
   const { addFile, setActiveFileId, activeFileId, updateFileContent } = useFileStore();
@@ -189,10 +192,10 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
   ];
 
   const helpItems = [
-    { label: 'Markdown 语法速查表', onClick: () => {} },
-    { label: '快捷键列表', onClick: () => {} },
+    { label: 'Markdown 语法速查表', onClick: () => onShowMarkdownHelp?.() },
+    { label: '快捷键列表', onClick: () => onShowShortcuts?.() },
     { divider: true, label: '' },
-    { label: '关于', onClick: () => {} },
+    { label: '关于', onClick: () => onShowAbout?.() },
   ];
 
   return (

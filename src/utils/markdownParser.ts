@@ -78,6 +78,60 @@ function renderKaTeX(content: string): string {
   }
 }
 
+// Pre-process: column layout (:::: column ... ::::)
+function preprocessColumns(source: string): string {
+  return source.replace(
+    /^:{4}\s+column\s*\n([\s\S]*?)^:{4}\s*$/gm,
+    (_match: string, inner: string) => {
+      let html = '<div class="column-container" style="display:flex;gap:10px;">\n';
+      // Match each ::: column-left/right with optional width
+      const colRe = /^:{3}\s+(column-\w+)\s*(\d+%?)?\s*\n([\s\S]*?)^:{3}\s*$/gm;
+      let m: RegExpExecArray | null;
+      while ((m = colRe.exec(inner)) !== null) {
+        const className = m[1];
+        const width = m[2] || 'auto';
+        const content = m[3].trim();
+        const widthStyle = width !== 'auto' ? `width:${width};` : 'flex:1;';
+        html += `<div class="${className}" style="${widthStyle}">\n\n${content}\n\n</div>\n`;
+      }
+      html += '</div>';
+      return html;
+    }
+  );
+}
+
+// Pre-process: container blocks (::: block-N ... :::)
+function preprocessContainers(source: string): string {
+  return source.replace(
+    /^:{3}\s+(block-\w+)\s*\n([\s\S]*?)^:{3}\s*$/gm,
+    (_match: string, className: string, content: string) => {
+      return `<div class="block-container ${className}">\n\n${content.trim()}\n\n</div>`;
+    }
+  );
+}
+
+// Post-process: ruby annotation {文字|拼音}
+function postprocessRuby(html: string): string {
+  return html.replace(
+    /\{([^{}|]+)\|([^{}|]+)\}/g,
+    (_match: string, text: string, pinyin: string) => {
+      return `<ruby>${text}<rp>(</rp><rt>${pinyin}</rt><rp>)</rp></ruby>`;
+    }
+  );
+}
+
+// Post-process: image size syntax ![alt](url =WxH) or ![alt](url =W%x)
+function postprocessImageSize(html: string): string {
+  return html.replace(
+    /<img\s+src="([^"]*?)\s*=(\d+%?)x(\d+%?)?"([^>]*?)alt="([^"]*?)"([^>]*?)\/?>/g,
+    (_match: string, src: string, w: string, h: string, before: string, alt: string, after: string) => {
+      const width = w ? ` width="${w}"` : '';
+      const height = h ? ` height="${h}"` : '';
+      return `<img src="${src.trim()}"${before}alt="${alt}"${after}${width}${height} />`;
+    }
+  );
+}
+
 export function renderMarkdown(source: string): string {
   let processed = source;
   const mathBlocks: string[] = [];
@@ -92,6 +146,11 @@ export function renderMarkdown(source: string): string {
     return `%%MATH_BLOCK_${mathBlocks.length - 1}%%`;
   });
 
+  // Pre-process: column layouts (must come before container blocks)
+  processed = preprocessColumns(processed);
+  // Pre-process: container blocks
+  processed = preprocessContainers(processed);
+
   let html = md.render(processed);
 
   // Restore math and render with KaTeX
@@ -100,6 +159,12 @@ export function renderMarkdown(source: string): string {
   });
 
   html = renderKaTeX(html);
+
+  // Post-process: ruby annotations
+  html = postprocessRuby(html);
+
+  // Post-process: image sizes
+  html = postprocessImageSize(html);
 
   return html;
 }

@@ -7,21 +7,36 @@ import { MarkdownPreview } from './components/Preview/MarkdownPreview';
 import { PreviewToolbar } from './components/Preview/PreviewToolbar';
 import { StatusBar } from './components/StatusBar/StatusBar';
 import { Toast } from './components/common/Toast';
+import { HelpModal } from './components/common/HelpModal';
 import { useEditorStore } from './store/editorStore';
 import { useFileStore } from './store/fileStore';
 import { copyAsWechat, copyAsZhihu, copyAsJuejin } from './utils/copyToClipboard';
 import { useSyncScroll } from './hooks/useSyncScroll';
 
 const App: React.FC = () => {
-  const { content, viewMode } = useEditorStore();
+  const { content, viewMode, setViewMode } = useEditorStore();
   const { sidebarVisible, setSidebarVisible, activeFileId, updateFileContent } = useFileStore();
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
+  const [helpModal, setHelpModal] = useState<'markdown' | 'shortcuts' | 'about' | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const { handleEditorScroll, handlePreviewScroll } = useSyncScroll(editorViewRef, previewRef);
+
+  // Responsive: auto-hide sidebar and switch to editor view on narrow screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSidebarVisible(false);
+        setViewMode('editor');
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setSidebarVisible, setViewMode]);
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -94,27 +109,39 @@ const App: React.FC = () => {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <MenuBar onToast={showToast} previewRef={previewRef} editorViewRef={editorViewRef} />
+      <MenuBar
+        onToast={showToast}
+        previewRef={previewRef}
+        editorViewRef={editorViewRef}
+        onShowMarkdownHelp={() => setHelpModal('markdown')}
+        onShowShortcuts={() => setHelpModal('shortcuts')}
+        onShowAbout={() => setHelpModal('about')}
+      />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Sidebar */}
-        {sidebarVisible && (
-          <div style={{ width: 220, backgroundColor: '#f7f7f7', borderRight: '1px solid #e0e0e0', flexShrink: 0, overflow: 'hidden' }}>
-            <FileTree />
-          </div>
-        )}
+        <div style={{
+          width: sidebarVisible ? 220 : 0,
+          backgroundColor: '#f7f7f7',
+          borderRight: sidebarVisible ? '1px solid #e0e0e0' : 'none',
+          flexShrink: 0,
+          overflow: 'hidden',
+          transition: 'width 0.2s ease',
+        }}>
+          {sidebarVisible && <FileTree />}
+        </div>
         {/* Sidebar toggle */}
         <div
           onClick={() => setSidebarVisible(!sidebarVisible)}
           style={{
-            width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', backgroundColor: '#f7f7f7', borderRight: '1px solid #e0e0e0',
-            flexShrink: 0, fontSize: 10, color: '#999', userSelect: 'none',
+            flexShrink: 0, fontSize: 14, color: '#999', userSelect: 'none',
           }}
           title={sidebarVisible ? '收起侧边栏' : '展开侧边栏'}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#eee')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f7f7f7')}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#eaeaea'; e.currentTarget.style.color = '#555'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#f7f7f7'; e.currentTarget.style.color = '#999'; }}
         >
-          {sidebarVisible ? '\u25C0' : '\u25B6'}
+          {sidebarVisible ? '\u276E' : '\u2630'}
         </div>
         {/* Editor */}
         {showEditor && (
@@ -154,6 +181,9 @@ const App: React.FC = () => {
       </div>
       <StatusBar />
       <Toast message={toastMsg} visible={toastVisible} onClose={() => setToastVisible(false)} />
+      {helpModal && (
+        <HelpModal type={helpModal} onClose={() => setHelpModal(null)} />
+      )}
     </div>
   );
 };
