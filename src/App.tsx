@@ -113,40 +113,43 @@ const App: React.FC = () => {
           {sidebarVisible && <FileTree />}
         </div>
 
-        {/* Editor */}
-        {showEditor && (
-          <div style={{
-            width: showPreview ? `calc(${splitPos}% - 2px)` : '100%',
-            flexShrink: 0, flexGrow: 0, overflow: 'hidden',
-          }}>
-            <MarkdownEditor onScroll={handleEditorScroll} editorViewRef={editorViewRef} />
-          </div>
-        )}
+        {/* Editor + Splitter + Preview */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
+          {/* Editor */}
+          {showEditor && (
+            <div style={{
+              width: showPreview ? `calc(${splitPos}% - 2px)` : '100%',
+              flexShrink: 0, flexGrow: 0, overflow: 'hidden',
+            }}>
+              <MarkdownEditor onScroll={handleEditorScroll} editorViewRef={editorViewRef} />
+            </div>
+          )}
 
-        {/* Splitter */}
-        {showEditor && showPreview && (
-          <div
-            onMouseDown={handleMouseDown}
-            style={{
-              width: 4, cursor: 'col-resize',
-              backgroundColor: isDragging ? '#35b378' : '#e0e0e0',
-              flexShrink: 0, flexGrow: 0,
-              transition: isDragging ? 'none' : 'background-color 0.2s',
-            }}
-            onMouseEnter={(e) => { if (!isDragging) e.currentTarget.style.backgroundColor = '#ccc'; }}
-            onMouseLeave={(e) => { if (!isDragging) e.currentTarget.style.backgroundColor = '#e0e0e0'; }}
-          />
-        )}
+          {/* Splitter */}
+          {showEditor && showPreview && (
+            <div
+              onMouseDown={handleMouseDown}
+              style={{
+                width: 4, cursor: 'col-resize',
+                backgroundColor: isDragging ? '#35b378' : '#e0e0e0',
+                flexShrink: 0, flexGrow: 0,
+                transition: isDragging ? 'none' : 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => { if (!isDragging) e.currentTarget.style.backgroundColor = '#ccc'; }}
+              onMouseLeave={(e) => { if (!isDragging) e.currentTarget.style.backgroundColor = '#e0e0e0'; }}
+            />
+          )}
 
-        {/* Preview */}
-        {showPreview && (
-          <div style={{
-            width: showEditor ? `calc(${100 - splitPos}% - 2px)` : '100%',
-            flexShrink: 0, flexGrow: 0, position: 'relative', overflow: 'hidden',
-          }}>
-            <MarkdownPreview previewRef={previewRef} onScroll={handlePreviewScroll} />
-          </div>
-        )}
+          {/* Preview */}
+          {showPreview && (
+            <div style={{
+              width: showEditor ? `calc(${100 - splitPos}% - 2px)` : '100%',
+              flexShrink: 0, flexGrow: 0, position: 'relative', overflow: 'hidden',
+            }}>
+              <MarkdownPreview previewRef={previewRef} onScroll={handlePreviewScroll} />
+            </div>
+          )}
+        </div>
 
         {/* Right Toolbar */}
         <RightToolbar
