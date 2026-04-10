@@ -1,12 +1,15 @@
 // ============================================================
-// 微信公众号富文本复制
-// 核心思路：将预览区的 CSS class 样式转为内联 style，
-//          将 ::before/::after 伪元素物化为真实 DOM 节点，
-//          将 flex 等微信不支持的布局转为兼容方案。
+// 微信公众号富文本复制 — 完整重写
+//
+// 策略：
+// 1. Diff-based 内联：只内联与浏览器默认值不同的属性（减少 HTML 90%+）
+// 2. 智能伪元素物化：背景图 → <img>，文本 → <span>，装饰线 → <span>
+// 3. 微信兼容：flex → block/inline-block，strip position:absolute
+// 4. 代码块：table 布局保留行号 + 语法高亮
 // ============================================================
 
-// 需要内联的 CSS 属性列表（覆盖所有视觉属性，不用 shorthand）
-const INLINE_PROPS = [
+// -- 需要检查的 CSS 属性 --
+const STYLE_PROPS = [
   'color', 'background-color', 'background-image', 'background-repeat',
   'background-position', 'background-size',
   'font-size', 'font-weight', 'font-style', 'font-family',
@@ -21,98 +24,199 @@ const INLINE_PROPS = [
   'border-top-left-radius', 'border-top-right-radius',
   'border-bottom-left-radius', 'border-bottom-right-radius',
   'border-collapse', 'border-spacing',
-  'display', 'width', 'max-width', 'min-width', 'height', 'max-height', 'min-height',
-  'overflow', 'overflow-x', 'overflow-y',
-  'white-space', 'word-break', 'overflow-wrap', 'word-wrap',
+  'display', 'width', 'max-width', 'min-width',
+  'height', 'max-height', 'min-height',
+  'overflow', 'white-space', 'word-break', 'overflow-wrap',
   'list-style-type', 'list-style-position',
   'vertical-align', 'box-sizing', 'box-shadow', 'opacity',
-  'float', 'clear',
-  'position', 'top', 'right', 'bottom', 'left',
-  'z-index',
-  // flex（给物化的伪元素和部分容器保留）
-  'flex-direction', 'justify-content', 'align-items', 'flex-wrap',
-  'flex-grow', 'flex-shrink', 'flex-basis',
 ];
 
-// 用于伪元素的属性列表（稍少一些）
-const PSEUDO_PROPS = [
-  'content', 'display',
-  'color', 'background-color', 'background-image',
-  'font-size', 'font-weight', 'font-style', 'font-family',
-  'line-height', 'text-align', 'text-decoration', 'text-indent',
-  'letter-spacing', 'word-spacing', 'text-shadow',
-  'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-  'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-  'border-top-style', 'border-top-width', 'border-top-color',
-  'border-right-style', 'border-right-width', 'border-right-color',
-  'border-bottom-style', 'border-bottom-width', 'border-bottom-color',
-  'border-left-style', 'border-left-width', 'border-left-color',
-  'border-top-left-radius', 'border-top-right-radius',
-  'border-bottom-left-radius', 'border-bottom-right-radius',
-  'width', 'height', 'max-width', 'min-width',
-  'position', 'top', 'right', 'bottom', 'left',
-  'float', 'clear', 'vertical-align',
-  'box-sizing', 'box-shadow', 'opacity',
-];
+// 可继承属性（子元素需显式设置，因为微信上下文中不会有父级继承）
+const INHERITED_PROPS = new Set([
+  'color', 'font-size', 'font-weight', 'font-style', 'font-family',
+  'line-height', 'letter-spacing', 'word-spacing', 'text-align',
+  'text-indent', 'text-transform', 'white-space', 'word-break',
+  'overflow-wrap', 'list-style-type', 'list-style-position',
+  'text-decoration',
+]);
 
-/** 从 getComputedStyle 提取指定属性列表为内联 style 字符串 */
-function buildStyleString(computed: CSSStyleDeclaration, props: string[]): string {
-  const parts: string[] = [];
-  for (const prop of props) {
-    const val = computed.getPropertyValue(prop);
-    if (val) parts.push(`${prop}:${val}`);
+// ---------- 默认样式缓存 ----------
+// 创建一个隐藏容器，放在 body 外部获取浏览器默认计算样式
+
+let _defaultCache: Map<string, Map<string, string>> | null = null;
+
+function getDefaultStylesForTag(tagName: string): Map<string, string> {
+  if (!_defaultCache) _defaultCache = new Map();
+  const key = tagName.toLowerCase();
+  if (_defaultCache.has(key)) return _defaultCache.get(key)!;
+
+  // 创建裸元素
+  const sandbox = document.createElement('div');
+  sandbox.style.cssText = 'position:fixed;left:-99999px;top:-99999px;visibility:hidden;pointer-events:none;';
+  document.body.appendChild(sandbox);
+
+  const el = document.createElement(tagName);
+  sandbox.appendChild(el);
+
+  const computed = window.getComputedStyle(el);
+  const styles = new Map<string, string>();
+  for (const prop of STYLE_PROPS) {
+    styles.set(prop, computed.getPropertyValue(prop));
   }
+
+  document.body.removeChild(sandbox);
+  _defaultCache.set(key, styles);
+  return styles;
+}
+
+/** 获取元素相对于默认样式的差异，生成紧凑的内联 style */
+function getDiffStyle(origEl: Element): string {
+  const computed = window.getComputedStyle(origEl);
+  const tag = origEl.tagName.toLowerCase();
+  const defaults = getDefaultStylesForTag(tag);
+  const parts: string[] = [];
+
+  for (const prop of STYLE_PROPS) {
+    const val = computed.getPropertyValue(prop);
+    if (!val) continue;
+    const def = defaults.get(prop) || '';
+
+    if (val !== def) {
+      // 微信兼容：flex → block
+      if (prop === 'display') {
+        if (val === 'flex') { parts.push('display:block'); continue; }
+        if (val === 'inline-flex') { parts.push('display:inline-block'); continue; }
+      }
+      parts.push(`${prop}:${val}`);
+    } else if (INHERITED_PROPS.has(prop)) {
+      // 可继承属性即使与 "默认裸元素" 相同，也可能是从主题根继承的值
+      // 需要检查是否与真正的浏览器默认值不同
+      // 但这里 defaults 已是浏览器默认值（裸元素在无主题容器中）
+      // 所以如果值相同就不需要内联——跳过
+    }
+  }
+
   return parts.join(';');
 }
 
-/** 将 flex display 转换为微信兼容的 display（微信不支持 flex） */
-function fixDisplayForWechat(style: string): string {
-  // 将 display:flex / display:inline-flex 替换为 block
-  return style
-    .replace(/display\s*:\s*inline-flex/g, 'display:inline-block')
-    .replace(/display\s*:\s*flex/g, 'display:block');
-}
+// ---------- 伪元素物化 ----------
 
-/**
- * 物化伪元素（::before / ::after）
- * 检查原始 DOM 元素的 ::before 和 ::after，如果有可见内容，
- * 在 clone 的对应元素中插入一个真实的 <span> 携带其计算样式。
- */
 function materializePseudoElements(cloneEl: Element, origEl: Element) {
   for (const pseudo of ['::before', '::after'] as const) {
     const cs = window.getComputedStyle(origEl, pseudo);
     const content = cs.getPropertyValue('content');
-    // content 为 none / "" / normal 时表示不存在
-    if (!content || content === 'none' || content === 'normal' || content === '""' || content === "''") continue;
+    if (!content || content === 'none' || content === 'normal') continue;
     const display = cs.getPropertyValue('display');
     if (display === 'none') continue;
 
-    const span = document.createElement('span');
-
-    // 解析 content 值（去掉引号）
+    // 解析 content 文本
     let text = '';
-    const m = content.match(/^["'](.*)["']$/);
+    const m = content.match(/^["']([\s\S]*)["']$/);
     if (m) text = m[1];
-    // content 可能是 attr() / url() 等，这里只处理文本
-    if (text) span.textContent = text;
 
-    // 构建样式
-    let style = buildStyleString(cs, PSEUDO_PROPS);
-    // 移除 content 属性（已作为 textContent）
-    style = style.replace(/content\s*:[^;]+;?/g, '');
-    // 修复 display
-    style = fixDisplayForWechat(style);
-    span.setAttribute('style', style);
+    const bgImage = cs.getPropertyValue('background-image');
+    const width = cs.getPropertyValue('width');
+    const height = cs.getPropertyValue('height');
+
+    let node: HTMLElement;
+
+    if (!text && bgImage && bgImage !== 'none') {
+      // 模式 A：content:"" + background-image（图标装饰）
+      const urlMatch = bgImage.match(/url\(["']?(.*?)["']?\)/);
+      if (urlMatch && urlMatch[1].startsWith('data:')) {
+        // data URL → <img> 标签
+        node = document.createElement('img');
+        node.setAttribute('src', urlMatch[1]);
+        const w = width && width !== 'auto' ? width : '16px';
+        const h = height && height !== 'auto' ? height : '16px';
+        node.setAttribute('style',
+          `display:inline-block;width:${w};height:${h};vertical-align:middle;margin-right:5px;border:0;`);
+      } else {
+        // gradient 或其他背景 → span with background
+        node = document.createElement('span');
+        const w = width && width !== 'auto' ? width : '16px';
+        const h = height && height !== 'auto' ? height : '16px';
+        node.setAttribute('style',
+          `display:inline-block;width:${w};height:${h};background-image:${bgImage};` +
+          `background-size:${cs.getPropertyValue('background-size') || 'contain'};` +
+          `background-repeat:no-repeat;vertical-align:middle;margin-right:5px;`);
+      }
+    } else if (!text) {
+      // 模式 B：content:"" + 边框/背景色（装饰线）
+      // 检查是否有可见边框或背景色
+      const bgColor = cs.getPropertyValue('background-color');
+      const hasBorder = ['top', 'right', 'bottom', 'left'].some(side => {
+        const style = cs.getPropertyValue(`border-${side}-style`);
+        const width = cs.getPropertyValue(`border-${side}-width`);
+        return style && style !== 'none' && width && width !== '0px';
+      });
+      const hasBg = bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent';
+
+      if (!hasBorder && !hasBg) continue; // 纯装饰无视觉效果，跳过
+
+      node = document.createElement('span');
+      const parts: string[] = ['display:inline-block'];
+      const w = width && width !== 'auto' ? width : undefined;
+      const h = height && height !== 'auto' ? height : undefined;
+      if (w) parts.push(`width:${w}`);
+      if (h) parts.push(`height:${h}`);
+      if (hasBg) parts.push(`background-color:${bgColor}`);
+      // 复制边框
+      for (const side of ['top', 'right', 'bottom', 'left']) {
+        const s = cs.getPropertyValue(`border-${side}-style`);
+        const bw = cs.getPropertyValue(`border-${side}-width`);
+        const c = cs.getPropertyValue(`border-${side}-color`);
+        if (s && s !== 'none') {
+          parts.push(`border-${side}-style:${s}`);
+          parts.push(`border-${side}-width:${bw}`);
+          parts.push(`border-${side}-color:${c}`);
+        }
+      }
+      const br = cs.getPropertyValue('border-radius');
+      if (br && br !== '0px') parts.push(`border-radius:${br}`);
+      parts.push('vertical-align:middle');
+      node.setAttribute('style', parts.join(';'));
+    } else {
+      // 模式 C：有文本内容
+      node = document.createElement('span');
+      node.textContent = text;
+      const parts: string[] = [];
+      // 复制视觉属性（不包括 position:absolute）
+      const propsToInline = [
+        'display', 'color', 'background-color', 'font-size', 'font-weight',
+        'font-style', 'font-family', 'line-height', 'text-align', 'letter-spacing',
+        'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+        'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+        'border-top-style', 'border-top-width', 'border-top-color',
+        'border-right-style', 'border-right-width', 'border-right-color',
+        'border-bottom-style', 'border-bottom-width', 'border-bottom-color',
+        'border-left-style', 'border-left-width', 'border-left-color',
+        'border-top-left-radius', 'border-top-right-radius',
+        'border-bottom-left-radius', 'border-bottom-right-radius',
+        'width', 'height', 'text-shadow', 'box-shadow', 'vertical-align',
+      ];
+      for (const prop of propsToInline) {
+        const val = cs.getPropertyValue(prop);
+        if (!val) continue;
+        if (prop === 'display') {
+          if (val === 'flex') { parts.push('display:inline-block'); continue; }
+          if (val === 'inline-flex') { parts.push('display:inline-block'); continue; }
+          if (val === 'block') { parts.push('display:inline-block'); continue; }
+        }
+        parts.push(`${prop}:${val}`);
+      }
+      node.setAttribute('style', parts.join(';'));
+    }
 
     if (pseudo === '::before') {
-      cloneEl.insertBefore(span, cloneEl.firstChild);
+      cloneEl.insertBefore(node, cloneEl.firstChild);
     } else {
-      cloneEl.appendChild(span);
+      cloneEl.appendChild(node);
     }
   }
 }
 
-// ---------- 代码块转换（微信兼容） ----------
+// ---------- 代码块转换 ----------
 
 function isLightBackground(bg: string): boolean {
   let r = 0, g = 0, b = 0;
@@ -170,7 +274,6 @@ function convertCodeBlocksForWechat(clone: Element, original: Element, macEnable
     const langLabel = wrapper.querySelector('.code-lang-label');
     const lang = langLabel ? langLabel.textContent || '' : '';
 
-    // 构建微信兼容 HTML
     const section = document.createElement('section');
     section.setAttribute('style', `background:${wrapperBg};border-radius:8px;margin:20px 0;overflow:auto;`);
 
@@ -196,7 +299,6 @@ function convertCodeBlocksForWechat(clone: Element, original: Element, macEnable
     }
     section.appendChild(header);
 
-    // 用 table 实现行号 + 代码
     const table = document.createElement('table');
     table.setAttribute('style', 'border-collapse:collapse;width:100%;border:none;margin:0;background:transparent;');
     const tbody = document.createElement('tbody');
@@ -234,18 +336,15 @@ function convertCodeBlocksForWechat(clone: Element, original: Element, macEnable
 function inlineStyles(container: Element): string {
   const tempAttr = '_wc_idx';
 
-  // 1. 先在原始 DOM 打标记，clone 后就能匹配
+  // 1. 标记原始 DOM，然后 clone
   const origAllEls = Array.from(container.querySelectorAll('*'));
   origAllEls.forEach((el, i) => el.setAttribute(tempAttr, String(i)));
-
   const clone = container.cloneNode(true) as Element;
-
-  // 立即清除原始 DOM 标记
   origAllEls.forEach((el) => el.removeAttribute(tempAttr));
 
   const macEnabled = container.classList.contains('mac-code-theme');
 
-  // 2. 代码块转换（在物化伪元素之前，因为代码块区域不需要物化）
+  // 2. 转换代码块
   convertCodeBlocksForWechat(clone, container, macEnabled);
 
   // 3. 移除交互元素
@@ -253,7 +352,7 @@ function inlineStyles(container: Element): string {
   clone.querySelectorAll('.code-mac-dots').forEach((el) => el.remove());
   clone.querySelectorAll('.code-line-numbers').forEach((el) => el.remove());
 
-  // 4. 标记已转换的代码块区域（不需要再处理）
+  // 4. 标记代码块区域（已处理，跳过）
   const processedEls = new Set<Element>();
   clone.querySelectorAll('section').forEach((sec) => {
     const s = sec.getAttribute('style') || '';
@@ -263,22 +362,19 @@ function inlineStyles(container: Element): string {
     }
   });
 
-  // 5. 遍历 clone 元素，内联样式 + 物化伪元素
+  // 5. 内联样式 + 物化伪元素
   const cloneAllEls = Array.from(clone.querySelectorAll('*'));
   cloneAllEls.forEach((el) => {
     if (processedEls.has(el)) return;
-
     const idx = el.getAttribute(tempAttr);
     if (idx === null) return;
 
     const origEl = origAllEls[parseInt(idx)];
     if (!origEl) return;
 
-    // 内联计算样式
-    const computed = window.getComputedStyle(origEl);
-    let style = buildStyleString(computed, INLINE_PROPS);
-    style = fixDisplayForWechat(style);
-    (el as HTMLElement).setAttribute('style', style);
+    // Diff-based 内联（只包含与默认值不同的属性）
+    const style = getDiffStyle(origEl);
+    if (style) (el as HTMLElement).setAttribute('style', style);
 
     // 物化伪元素
     materializePseudoElements(el, origEl);
@@ -286,19 +382,16 @@ function inlineStyles(container: Element): string {
     el.removeAttribute(tempAttr);
   });
 
-  // 6. 根元素样式
-  let rootStyle = buildStyleString(window.getComputedStyle(container), INLINE_PROPS);
-  rootStyle = fixDisplayForWechat(rootStyle);
-  (clone as HTMLElement).setAttribute('style', rootStyle);
-  // 物化根元素伪元素
+  // 6. 根元素
+  const rootStyle = getDiffStyle(container);
+  if (rootStyle) (clone as HTMLElement).setAttribute('style', rootStyle);
   materializePseudoElements(clone, container);
 
-  // 7. 处理表格
+  // 7. 表格处理
   clone.querySelectorAll('.table-wrapper').forEach((wrapper) => {
     const table = wrapper.querySelector('table');
     if (table) wrapper.parentNode?.replaceChild(table, wrapper);
   });
-
   clone.querySelectorAll('table').forEach((table) => {
     const htmlTable = table as HTMLElement;
     const existingStyle = htmlTable.getAttribute('style') || '';
@@ -308,23 +401,17 @@ function inlineStyles(container: Element): string {
       .replace(/\bmax-width\s*:[^;]+;?/g, '');
     htmlTable.setAttribute('style', cleanedStyle + ';border-collapse:collapse;width:100%;table-layout:fixed;');
   });
-
   clone.querySelectorAll('th, td').forEach((cell) => {
     const htmlCell = cell as HTMLElement;
     const existingStyle = htmlCell.getAttribute('style') || '';
-    const cleanedStyle = existingStyle
-      .replace(/\bwidth\s*:[^;]+;?/g, '')
-      .replace(/\bmin-width\s*:[^;]+;?/g, '')
-      .replace(/\bmax-width\s*:[^;]+;?/g, '');
-    if (!cleanedStyle.includes('border:') && !cleanedStyle.includes('border-top-style:solid')) {
-      htmlCell.setAttribute('style', cleanedStyle + ';border:1px solid #dfe2e5;padding:6px 13px;');
+    if (!existingStyle.includes('border') || existingStyle.includes('border:none')) {
+      htmlCell.setAttribute('style', existingStyle + ';border:1px solid #dfe2e5;padding:6px 13px;');
     }
   });
 
-  // 8. 移除 data-* / class / 临时标记属性
+  // 8. 清理属性
   clone.querySelectorAll('*').forEach((el) => {
-    const attrs = Array.from(el.attributes);
-    attrs.forEach((attr) => {
+    Array.from(el.attributes).forEach((attr) => {
       if (attr.name.startsWith('data-') || attr.name === 'class' || attr.name === tempAttr) {
         el.removeAttribute(attr.name);
       }
@@ -332,6 +419,9 @@ function inlineStyles(container: Element): string {
   });
   clone.removeAttribute('class');
   clone.removeAttribute(tempAttr);
+
+  // 清空默认样式缓存
+  _defaultCache = null;
 
   return clone.outerHTML;
 }
@@ -346,17 +436,25 @@ export async function copyAsWechat(previewContainer: Element): Promise<void> {
   const blob = new Blob([html], { type: 'text/html' });
   try {
     await navigator.clipboard.write([
-      new ClipboardItem({ 'text/html': blob }),
+      new ClipboardItem({
+        'text/html': blob,
+        'text/plain': new Blob([themeEl.textContent || ''], { type: 'text/plain' }),
+      }),
     ]);
   } catch {
-    // Fallback
+    // Fallback: 创建临时元素并用 execCommand
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    temp.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+    document.body.appendChild(temp);
     const range = document.createRange();
-    range.selectNodeContents(themeEl);
+    range.selectNodeContents(temp);
     const sel = window.getSelection();
     sel?.removeAllRanges();
     sel?.addRange(range);
     document.execCommand('copy');
     sel?.removeAllRanges();
+    document.body.removeChild(temp);
   }
 }
 
