@@ -51,6 +51,20 @@ md.renderer.rules.fence = function(tokens: any[], idx: number, options: any, _en
   return `<pre><code>${md.utils.escapeHtml(str)}</code></pre>`;
 };
 
+// Wrap tables in a scrollable container for overflow handling
+const defaultTableOpen = md.renderer.rules.table_open || function(tokens: any[], idx: number, options: any, _env: any, self: any) {
+  return self.renderToken(tokens, idx, options);
+};
+md.renderer.rules.table_open = function(tokens: any[], idx: number, options: any, env: any, self: any) {
+  return '<div class="table-wrapper">' + defaultTableOpen(tokens, idx, options, env, self);
+};
+const defaultTableClose = md.renderer.rules.table_close || function(tokens: any[], idx: number, options: any, _env: any, self: any) {
+  return self.renderToken(tokens, idx, options);
+};
+md.renderer.rules.table_close = function(tokens: any[], idx: number, options: any, env: any, self: any) {
+  return defaultTableClose(tokens, idx, options, env, self) + '</div>';
+};
+
 // Add data-line attributes for sync scrolling
 const defaultRender = md.renderer.rules.paragraph_open || function(tokens: any[], idx: number, options: any, _env: any, self: any) {
   return self.renderToken(tokens, idx, options);
