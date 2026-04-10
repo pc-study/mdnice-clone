@@ -44,7 +44,7 @@ export function exportHTML(html: string, themeCSS: string, title: string) {
   </style>
 </head>
 <body>
-  <div class="preview-theme">${html}</div>
+  <div id="nice">${html}</div>
 </body>
 </html>`;
   downloadBlob(new Blob([fullHtml], { type: 'text/html;charset=utf-8' }), title + '.html');
