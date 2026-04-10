@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useFileStore } from '../../store/fileStore';
 import type { FileItem } from '../../store/fileStore';
 
@@ -9,11 +9,16 @@ const FileItemComponent: React.FC<{
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   onRename: (id: string, name: string) => void;
-}> = ({ item, depth, activeFileId, onSelect, onDelete, onRename }) => {
+  onMove: (dragId: string, targetId: string, position: 'before' | 'after' | 'inside') => void;
+  dragId: string | null;
+  setDragId: (id: string | null) => void;
+}> = ({ item, depth, activeFileId, onSelect, onDelete, onRename, onMove, dragId, setDragId }) => {
   const [expanded, setExpanded] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(item.name);
   const [hovered, setHovered] = useState(false);
+  const [dropPos, setDropPos] = useState<'before' | 'after' | 'inside' | null>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
   const isActive = item.id === activeFileId;
 
   const handleDoubleClick = () => {
@@ -26,15 +31,82 @@ const FileItemComponent: React.FC<{
     setEditing(false);
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const typeName = item.type === 'folder' ? '文件夹' : '文件';
+    if (confirm(`确定删除${typeName} "${item.name}"？${item.type === 'folder' ? '（将同时删除其中的所有内容）' : ''}`)) {
+      onDelete(item.id);
+    }
+  };
+
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', item.id);
+    setDragId(item.id);
+  };
+
+  const handleDragEnd = () => {
+    setDragId(null);
+    setDropPos(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (!rowRef.current || dragId === item.id) return;
+    const rect = rowRef.current.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const h = rect.height;
+    if (item.type === 'folder') {
+      if (y < h * 0.25) setDropPos('before');
+      else if (y > h * 0.75) setDropPos('after');
+      else setDropPos('inside');
+    } else {
+      setDropPos(y < h / 2 ? 'before' : 'after');
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDropPos(null);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const srcId = e.dataTransfer.getData('text/plain');
+    if (srcId && srcId !== item.id && dropPos) {
+      onMove(srcId, item.id, dropPos);
+    }
+    setDropPos(null);
+    setDragId(null);
+  };
+
+  const dropIndicatorStyle = (): React.CSSProperties => {
+    if (!dropPos || dragId === item.id) return {};
+    if (dropPos === 'before') return { borderTop: '2px solid #35b378' };
+    if (dropPos === 'after') return { borderBottom: '2px solid #35b378' };
+    return { backgroundColor: 'rgba(53,179,120,0.12)', outline: '1px dashed #35b378' };
+  };
+
+  const isDragging = dragId === item.id;
+
   return (
-    <div>
+    <div style={{ opacity: isDragging ? 0.4 : 1 }}>
       <div
+        ref={rowRef}
+        draggable={!editing}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         style={{
-          padding: '5px 8px', paddingLeft: depth * 16 + 8, cursor: 'pointer',
+          padding: '5px 8px', paddingLeft: depth * 16 + 8, cursor: editing ? 'text' : 'grab',
           backgroundColor: isActive ? '#e8f5e9' : hovered ? '#f0f0f0' : 'transparent',
           display: 'flex', alignItems: 'center', fontSize: 13, color: isActive ? '#2e7d32' : '#333',
           gap: 6, borderLeft: isActive ? '3px solid #35b378' : '3px solid transparent',
           transition: 'background-color 0.15s, border-color 0.15s',
+          ...dropIndicatorStyle(),
         }}
         onClick={() => item.type === 'file' ? onSelect(item.id) : setExpanded(!expanded)}
         onDoubleClick={handleDoubleClick}
@@ -42,7 +114,7 @@ const FileItemComponent: React.FC<{
         onMouseLeave={() => setHovered(false)}
         onContextMenu={(e) => {
           e.preventDefault();
-          if (confirm(`删除 "${item.name}"？`)) onDelete(item.id);
+          handleDelete(e);
         }}
       >
         <span style={{ color: isActive ? '#35b378' : '#999', fontSize: 12, width: 14, textAlign: 'center', flexShrink: 0 }}>
@@ -61,18 +133,35 @@ const FileItemComponent: React.FC<{
         ) : (
           <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: isActive ? 500 : 400 }}>{item.name}</span>
         )}
+        {hovered && !editing && (
+          <button
+            onClick={handleDelete}
+            style={{
+              border: 'none', background: 'none', cursor: 'pointer', padding: '0 2px',
+              fontSize: 14, color: '#999', lineHeight: 1, flexShrink: 0,
+            }}
+            onMouseEnter={(e) => { (e.target as HTMLElement).style.color = '#e53935'; }}
+            onMouseLeave={(e) => { (e.target as HTMLElement).style.color = '#999'; }}
+            title="删除"
+          >
+            ✕
+          </button>
+        )}
       </div>
       {item.type === 'folder' && expanded && item.children?.map((child) => (
         <FileItemComponent key={child.id} item={child} depth={depth + 1} activeFileId={activeFileId}
-          onSelect={onSelect} onDelete={onDelete} onRename={onRename} />
+          onSelect={onSelect} onDelete={onDelete} onRename={onRename} onMove={onMove}
+          dragId={dragId} setDragId={setDragId} />
       ))}
     </div>
   );
 };
+
 export const FileTree: React.FC = () => {
-  const { files, activeFileId, setActiveFileId, addFile, addFolder, deleteFile, renameFile } = useFileStore();
+  const { files, activeFileId, setActiveFileId, addFile, addFolder, deleteFile, renameFile, moveFile } = useFileStore();
   const [newName, setNewName] = useState('');
   const [showNew, setShowNew] = useState<'file' | 'folder' | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
 
   const handleCreate = () => {
     if (!newName.trim()) { setShowNew(null); return; }
@@ -119,7 +208,8 @@ export const FileTree: React.FC = () => {
       <div style={{ flex: 1, overflow: 'auto' }}>
         {files.map((item) => (
           <FileItemComponent key={item.id} item={item} depth={0} activeFileId={activeFileId}
-            onSelect={setActiveFileId} onDelete={deleteFile} onRename={renameFile} />
+            onSelect={setActiveFileId} onDelete={deleteFile} onRename={renameFile}
+            onMove={moveFile} dragId={dragId} setDragId={setDragId} />
         ))}
       </div>
     </div>

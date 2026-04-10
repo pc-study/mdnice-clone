@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dropdown } from '../common/Dropdown';
+import { TableInsertDialog } from '../common/TableInsertDialog';
+import { LinkImageDialog } from '../common/LinkImageDialog';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useFileStore } from '../../store/fileStore';
@@ -16,11 +18,12 @@ import {
   prefixLines,
   prefixLinesOrdered,
   insertCodeBlock,
-  insertLink,
-  insertImage,
   insertTable,
   insertHorizontalRule,
   insertInlineCode,
+  insertLinkWithDialog,
+  insertImageWithDialog,
+  insertTOC,
 } from '../../utils/editorCommands';
 
 interface MenuBarProps {
@@ -37,6 +40,11 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
   const { content, setContent, viewMode, setViewMode, fontSize, setFontSize, lineHeight, setLineHeight, wordWrap, setWordWrap } = useEditorStore();
   const { currentTheme, currentCodeTheme, setCurrentCodeTheme, macStyleEnabled, setMacStyleEnabled } = useThemeStore();
   const { addFile, setActiveFileId, activeFileId, updateFileContent } = useFileStore();
+
+  const [showTableDialog, setShowTableDialog] = useState(false);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [selectedText, setSelectedText] = useState('');
 
   const toast = (msg: string) => onToast?.(msg);
 
@@ -98,10 +106,23 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
     { divider: true, label: '' },
     { label: '代码块', shortcut: 'Ctrl+Shift+C', onClick: () => { if (ev()) insertCodeBlock(ev()!); } },
     { label: '行内代码', onClick: () => { if (ev()) insertInlineCode(ev()!); } },
-    { label: '链接', shortcut: 'Ctrl+K', onClick: () => { if (ev()) insertLink(ev()!); } },
-    { label: '图片', shortcut: 'Ctrl+Shift+I', onClick: () => { if (ev()) insertImage(ev()!); } },
-    { label: '表格', onClick: () => { if (ev()) insertTable(ev()!); } },
+    { label: '链接', shortcut: 'Ctrl+K', onClick: () => {
+      if (ev()) {
+        const { from, to } = ev()!.state.selection.main;
+        setSelectedText(ev()!.state.sliceDoc(from, to));
+        setShowLinkDialog(true);
+      }
+    } },
+    { label: '图片', shortcut: 'Ctrl+Shift+I', onClick: () => {
+      if (ev()) {
+        const { from, to } = ev()!.state.selection.main;
+        setSelectedText(ev()!.state.sliceDoc(from, to));
+        setShowImageDialog(true);
+      }
+    } },
+    { label: '表格', onClick: () => setShowTableDialog(true) },
     { label: '分割线', onClick: () => { if (ev()) insertHorizontalRule(ev()!); } },
+    { label: 'TOC 目录', onClick: () => { if (ev()) insertTOC(ev()!); } },
   ];
 
 
@@ -231,6 +252,25 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
       <Dropdown label="查看" items={viewItems} />
       <Dropdown label="设置" items={settingsItems} />
       <Dropdown label="帮助" items={helpItems} />
+      <TableInsertDialog
+        visible={showTableDialog}
+        onClose={() => setShowTableDialog(false)}
+        onInsert={(rows, cols) => { if (ev()) insertTable(ev()!, rows, cols); }}
+      />
+      <LinkImageDialog
+        visible={showLinkDialog}
+        type="link"
+        onClose={() => setShowLinkDialog(false)}
+        onInsert={(text, url) => { if (ev()) insertLinkWithDialog(ev()!, text, url); }}
+        initialText={selectedText}
+      />
+      <LinkImageDialog
+        visible={showImageDialog}
+        type="image"
+        onClose={() => setShowImageDialog(false)}
+        onInsert={(alt, url) => { if (ev()) insertImageWithDialog(ev()!, alt, url); }}
+        initialText={selectedText}
+      />
     </div>
   );
 };

@@ -83,3 +83,29 @@ export function insertHorizontalRule(view: EditorView) {
 export function insertInlineCode(view: EditorView) {
   wrapSelection(view, '`', '`');
 }
+
+export function insertLinkWithDialog(view: EditorView, text: string, url: string) {
+  const { from, to } = view.state.selection.main;
+  const replacement = `[${text}](${url})`;
+  view.dispatch({
+    changes: { from, to, insert: replacement },
+    selection: { anchor: from + replacement.length },
+  });
+  view.focus();
+}
+
+export function insertImageWithDialog(view: EditorView, alt: string, url: string) {
+  const { from, to } = view.state.selection.main;
+  const replacement = `![${alt}](${url})`;
+  view.dispatch({
+    changes: { from, to, insert: replacement },
+    selection: { anchor: from + replacement.length },
+  });
+  view.focus();
+}
+
+export function insertTOC(view: EditorView) {
+  const { from, to } = view.state.selection.main;
+  view.dispatch({ changes: { from, to, insert: '\n[TOC]\n' } });
+  view.focus();
+}

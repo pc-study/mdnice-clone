@@ -24,6 +24,7 @@ interface FileState {
   deleteFile: (id: string) => void;
   renameFile: (id: string, name: string) => void;
   updateFileContent: (id: string, content: string) => void;
+  moveFile: (dragId: string, targetId: string, position: 'before' | 'after' | 'inside') => void;
 }
 
 const DEFAULT_FILES: FileItem[] = [
@@ -78,6 +79,44 @@ function addToParent(files: FileItem[], parentId: string | null, item: FileItem)
   });
 }
 
+function findItem(files: FileItem[], id: string): FileItem | null {
+  for (const f of files) {
+    if (f.id === id) return f;
+    if (f.children) {
+      const found = findItem(f.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function insertAt(files: FileItem[], targetId: string, item: FileItem, position: 'before' | 'after'): FileItem[] {
+  const result: FileItem[] = [];
+  for (const f of files) {
+    if (f.id === targetId) {
+      if (position === 'before') { result.push(item); result.push(f); }
+      else { result.push(f); result.push(item); }
+    } else {
+      if (f.children) {
+        result.push({ ...f, children: insertAt(f.children, targetId, item, position) });
+      } else {
+        result.push(f);
+      }
+    }
+  }
+  return result;
+}
+
+function addInside(files: FileItem[], targetId: string, item: FileItem): FileItem[] {
+  return files.map((f) => {
+    if (f.id === targetId && f.type === 'folder') {
+      return { ...f, children: [...(f.children || []), item] };
+    }
+    if (f.children) return { ...f, children: addInside(f.children, targetId, item) };
+    return f;
+  });
+}
+
 export const useFileStore = create<FileState>((set, get) => ({
   files: loadFiles(),
   activeFileId: localStorage.getItem('mdnice-activeFileId') || 'default-file',
@@ -122,6 +161,21 @@ export const useFileStore = create<FileState>((set, get) => ({
   },
   updateFileContent: (id, content) => {
     const files = findAndUpdate(get().files, id, (f) => ({ ...f, content, updatedAt: Date.now() }));
+    saveFiles(files);
+    set({ files });
+  },
+  moveFile: (dragId, targetId, position) => {
+    if (dragId === targetId) return;
+    const item = findItem(get().files, dragId);
+    if (!item) return;
+    // Remove dragged item first
+    let files = findAndRemove(get().files, dragId);
+    // Insert at new position
+    if (position === 'inside') {
+      files = addInside(files, targetId, item);
+    } else {
+      files = insertAt(files, targetId, item, position);
+    }
     saveFiles(files);
     set({ files });
   },
