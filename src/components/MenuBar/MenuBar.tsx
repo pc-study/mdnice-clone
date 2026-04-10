@@ -104,9 +104,6 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
     { label: '分割线', onClick: () => { if (ev()) insertHorizontalRule(ev()!); } },
   ];
 
-  const themeItems = [
-    { label: '选择主题...', onClick: () => onShowThemeSelector?.() },
-  ];
 
   const codeThemeItems: { label: string; checked?: boolean; onClick?: () => void; divider?: boolean }[] = [
     {
@@ -216,7 +213,19 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
       </div>
       <Dropdown label="文件" items={fileItems} />
       <Dropdown label="格式" items={formatItems} />
-      <Dropdown label="主题" items={themeItems} />
+      <div style={{ flexShrink: 0 }}>
+        <button
+          onClick={() => onShowThemeSelector?.()}
+          style={{
+            background: 'none', border: 'none', padding: '6px 12px',
+            cursor: 'pointer', fontSize: 14, color: '#333', borderRadius: 4, whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f5f5f5'; }}
+          onMouseLeave={(e) => { (e.target as HTMLElement).style.backgroundColor = 'transparent'; }}
+        >
+          主题
+        </button>
+      </div>
       <Dropdown label="代码主题" items={codeThemeItems} />
       <Dropdown label="功能" items={functionItems} />
       <Dropdown label="查看" items={viewItems} />
