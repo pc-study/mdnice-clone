@@ -42,12 +42,64 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
       <style>{themeCSS}</style>
       <style>{codeThemeCSS}</style>
       <style>{`
-        .code-block-wrapper { position: relative; margin: 1em 0; }
-        .code-lang-label { position: absolute; top: 0; right: 8px; font-size: 12px; color: #999; padding: 2px 8px; }
-        .code-block-body { display: flex; }
-        .code-line-numbers { padding: 16px 8px 16px 12px; text-align: right; color: #666; font-size: 13px; line-height: 1.5; font-family: monospace; user-select: none; background: rgba(0,0,0,0.05); }
-        .code-line-numbers span { display: block; }
-        .hljs { flex: 1; margin: 0; }
+        .markdown-body {
+          padding: 20px 24px;
+        }
+        .markdown-body .code-block-wrapper {
+          position: relative;
+          margin: 10px 0;
+          border-radius: 5px;
+          overflow: hidden;
+          box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 8px;
+        }
+        .markdown-body .code-lang-label {
+          position: absolute;
+          top: 6px;
+          right: 12px;
+          font-size: 12px;
+          color: rgba(255,255,255,0.5);
+          padding: 0 6px;
+          z-index: 1;
+          pointer-events: none;
+        }
+        .markdown-body .code-block-body {
+          display: flex;
+          overflow: auto;
+        }
+        .markdown-body .code-line-numbers {
+          padding: 15px 8px 15px 12px;
+          text-align: right;
+          color: rgba(255,255,255,0.35);
+          font-size: 12px;
+          line-height: 1.75;
+          font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+          user-select: none;
+          flex-shrink: 0;
+        }
+        .markdown-body .code-line-numbers span { display: block; }
+        .markdown-body .code-block-wrapper pre.hljs {
+          flex: 1;
+          margin: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+        }
+        .markdown-body .code-block-wrapper pre.hljs code {
+          padding: 15px 12px !important;
+          font-size: 12px;
+          line-height: 1.75;
+          background: transparent !important;
+        }
+        .markdown-body .code-line-numbers {
+          background: inherit;
+        }
+        .markdown-body img {
+          max-width: 100%;
+        }
+        .markdown-body table {
+          border-collapse: collapse;
+          width: auto;
+          display: table;
+        }
       `}</style>
       <div
         className="markdown-body"
