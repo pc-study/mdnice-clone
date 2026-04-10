@@ -301,7 +301,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
         }
         .markdown-body table {
           border-collapse: collapse;
-          min-width: 100%;
+          width: 100%;
           display: table;
           word-break: normal;
         }
