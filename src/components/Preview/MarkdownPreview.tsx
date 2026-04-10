@@ -373,6 +373,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
         }
       `}</style>
       <div
+        id="nice"
         className={`markdown-body${macStyleEnabled ? ' mac-code-theme' : ''}${codeColorClass}`}
         dangerouslySetInnerHTML={{ __html: html }}
         onClick={handleClick}

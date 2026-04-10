@@ -7,8 +7,8 @@ interface ThemeSelectorProps {
   onClose: () => void;
 }
 
-// 预览用的示例 Markdown HTML
-const PREVIEW_HTML = `<h2 style="margin:0 0 6px 0">标题示例</h2><p style="margin:0 0 6px 0">正文内容，<strong>加粗</strong>和<code>代码</code>展示。</p><blockquote style="margin:0"><p style="margin:0">引用文本</p></blockquote>`;
+// 预览用的示例 Markdown HTML（包含 prefix/content/suffix 结构以兼容 mdnice 主题）
+const PREVIEW_HTML = `<h2 style="margin:0 0 6px 0"><span class="prefix"></span><span class="content">标题示例</span><span class="suffix"></span></h2><p style="margin:0 0 6px 0">正文内容，<strong>加粗</strong>和<code>代码</code>展示。</p><blockquote style="margin:0"><p style="margin:0">引用文本</p></blockquote>`;
 
 export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ visible, onClose }) => {
   const { currentTheme, setCurrentTheme } = useThemeStore();
@@ -188,7 +188,10 @@ const ThemeCard: React.FC<ThemeCardProps> = React.memo(({ themeId, themeName, is
 
 // 将主题 CSS 作用域限定到卡片内部
 function scopeCSS(themeId: string, css: string): string {
-  return css.replace(/\.markdown-body/g, `.theme-preview-${themeId} .markdown-body`);
+  // juejin 主题使用 .markdown-body，mdnice 主题使用 #nice
+  return css
+    .replace(/\.markdown-body/g, `.theme-preview-${themeId} .markdown-body`)
+    .replace(/#nice/g, `.theme-preview-${themeId} .markdown-body`);
 }
 
 // === 样式常量 ===

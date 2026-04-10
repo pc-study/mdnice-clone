@@ -78,7 +78,7 @@ md.renderer.rules.paragraph_open = function(tokens: any[], idx: number, options:
   return defaultRender(tokens, idx, options, env, self);
 };
 
-// Add data-line to headings
+// Add data-line to headings + wrap content in prefix/content/suffix spans (for mdnice theme compatibility)
 const defaultHeadingOpen = md.renderer.rules.heading_open || function(tokens: any[], idx: number, options: any, _env: any, self: any) {
   return self.renderToken(tokens, idx, options);
 };
@@ -88,7 +88,16 @@ md.renderer.rules.heading_open = function(tokens: any[], idx: number, options: a
   if (token.map && token.map.length) {
     token.attrSet('data-line', String(token.map[0]));
   }
-  return defaultHeadingOpen(tokens, idx, options, env, self);
+  return defaultHeadingOpen(tokens, idx, options, env, self) +
+    '<span class="prefix"></span><span class="content">';
+};
+
+const defaultHeadingClose = md.renderer.rules.heading_close || function(tokens: any[], idx: number, options: any, _env: any, self: any) {
+  return self.renderToken(tokens, idx, options);
+};
+
+md.renderer.rules.heading_close = function(tokens: any[], idx: number, options: any, env: any, self: any) {
+  return '</span><span class="suffix"></span>' + defaultHeadingClose(tokens, idx, options, env, self);
 };
 
 // KaTeX support
