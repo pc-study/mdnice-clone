@@ -8,6 +8,7 @@ import { PreviewToolbar } from './components/Preview/PreviewToolbar';
 import { StatusBar } from './components/StatusBar/StatusBar';
 import { Toast } from './components/common/Toast';
 import { HelpModal } from './components/common/HelpModal';
+import { ThemeSelector } from './components/ThemeSelector/ThemeSelector';
 import { useEditorStore } from './store/editorStore';
 import { useFileStore } from './store/fileStore';
 import { copyAsWechat, copyAsZhihu, copyAsJuejin } from './utils/copyToClipboard';
@@ -21,6 +22,7 @@ const App: React.FC = () => {
   const [toastMsg, setToastMsg] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const [helpModal, setHelpModal] = useState<'markdown' | 'shortcuts' | 'about' | null>(null);
+  const [themeSelectorVisible, setThemeSelectorVisible] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const { handleEditorScroll, handlePreviewScroll } = useSyncScroll(editorViewRef, previewRef);
@@ -115,6 +117,7 @@ const App: React.FC = () => {
         onShowMarkdownHelp={() => setHelpModal('markdown')}
         onShowShortcuts={() => setHelpModal('shortcuts')}
         onShowAbout={() => setHelpModal('about')}
+        onShowThemeSelector={() => setThemeSelectorVisible(true)}
       />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Sidebar */}
@@ -183,6 +186,7 @@ const App: React.FC = () => {
       {helpModal && (
         <HelpModal type={helpModal} onClose={() => setHelpModal(null)} />
       )}
+      <ThemeSelector visible={themeSelectorVisible} onClose={() => setThemeSelectorVisible(false)} />
     </div>
   );
 };

@@ -3,7 +3,6 @@ import { Dropdown } from '../common/Dropdown';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useFileStore } from '../../store/fileStore';
-import { themeList } from '../../themes';
 import { codeThemeList } from '../../codeThemes';
 import { importMarkdownFile, exportMarkdown, exportHTML } from '../../utils/fileManager';
 import { copyAsWechat, copyAsZhihu, copyAsJuejin } from '../../utils/copyToClipboard';
@@ -31,11 +30,12 @@ interface MenuBarProps {
   onShowMarkdownHelp?: () => void;
   onShowShortcuts?: () => void;
   onShowAbout?: () => void;
+  onShowThemeSelector?: () => void;
 }
 
-export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorViewRef, onShowMarkdownHelp, onShowShortcuts, onShowAbout }) => {
+export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorViewRef, onShowMarkdownHelp, onShowShortcuts, onShowAbout, onShowThemeSelector }) => {
   const { content, setContent, viewMode, setViewMode, fontSize, setFontSize, lineHeight, setLineHeight, wordWrap, setWordWrap } = useEditorStore();
-  const { currentTheme, setCurrentTheme, currentCodeTheme, setCurrentCodeTheme, macStyleEnabled, setMacStyleEnabled } = useThemeStore();
+  const { currentTheme, currentCodeTheme, setCurrentCodeTheme, macStyleEnabled, setMacStyleEnabled } = useThemeStore();
   const { addFile, setActiveFileId, activeFileId, updateFileContent } = useFileStore();
 
   const toast = (msg: string) => onToast?.(msg);
@@ -104,11 +104,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
     { label: '分割线', onClick: () => { if (ev()) insertHorizontalRule(ev()!); } },
   ];
 
-  const themeItems = themeList.map((t) => ({
-    label: t.name,
-    checked: currentTheme === t.id,
-    onClick: () => setCurrentTheme(t.id),
-  }));
+  const themeItems = [
+    { label: '选择主题...', onClick: () => onShowThemeSelector?.() },
+  ];
 
   const codeThemeItems: { label: string; checked?: boolean; onClick?: () => void; divider?: boolean }[] = [
     {
