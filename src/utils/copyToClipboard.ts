@@ -2,15 +2,32 @@
 function getComputedStylesForElement(el: Element): string {
   const computed = window.getComputedStyle(el);
   const important = [
-    'color', 'background-color', 'background', 'font-size', 'font-weight', 'font-style',
-    'font-family', 'line-height', 'text-align', 'text-decoration', 'margin',
-    'padding', 'border', 'border-left', 'border-right', 'border-top', 'border-bottom',
+    'color', 'background-color', 'background',
+    'font-size', 'font-weight', 'font-style', 'font-family',
+    'line-height', 'text-align', 'text-decoration', 'text-indent',
+    'letter-spacing', 'word-spacing',
+    // 使用具体方向的 margin/padding，因为 getComputedStyle 对 shorthand 不可靠
+    'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+    'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+    'border', 'border-left', 'border-right', 'border-top', 'border-bottom',
     'border-collapse', 'border-spacing', 'border-radius',
-    'display', 'width', 'min-width', 'max-width', 'overflow', 'white-space',
+    'display', 'width', 'min-width', 'max-width', 'height',
+    'overflow', 'white-space',
     'list-style-type', 'list-style-position', 'vertical-align',
-    'box-sizing', 'word-break', 'word-wrap',
+    'box-sizing', 'word-break', 'overflow-wrap',
+    'text-shadow', 'box-shadow', 'opacity',
   ];
-  return important.map((prop) => `${prop}:${computed.getPropertyValue(prop)}`).join(';');
+  const parts: string[] = [];
+  for (const prop of important) {
+    const val = computed.getPropertyValue(prop);
+    if (val && val !== 'none' && val !== 'normal' && val !== 'auto' && val !== '0px'
+      && val !== 'visible' && val !== 'baseline' && val !== 'start'
+      && val !== 'content-box' && val !== 'disc' && val !== 'outside') {
+      // 跳过默认值以减小 HTML 体积
+      parts.push(`${prop}:${val}`);
+    }
+  }
+  return parts.join(';');
 }
 
 /**
@@ -151,7 +168,17 @@ function isLightBackground(bg: string): boolean {
 }
 
 function inlineStyles(container: Element): string {
+  const tempAttr = '_wc_idx';
+
+  // ★ 关键修复：先在原始 DOM 上打标记，再 clone
+  //   这样 clone 出来的元素也会携带 _wc_idx 属性，后续才能正确匹配回原始元素获取计算样式
+  const origAllEls = container.querySelectorAll('*');
+  origAllEls.forEach((el, i) => el.setAttribute(tempAttr, String(i)));
+
   const clone = container.cloneNode(true) as Element;
+
+  // 立即清除原始 DOM 上的标记（不影响 clone）
+  origAllEls.forEach((el) => el.removeAttribute(tempAttr));
 
   // 检测是否启用了 Mac 风格
   const macEnabled = container.classList.contains('mac-code-theme');
@@ -175,19 +202,8 @@ function inlineStyles(container: Element): string {
   });
 
   // 4. 为其他元素内联计算样式
-  //    由于代码块结构已改变，用索引匹配不再可靠
-  //    改为：对 clone 中非代码块的元素，找到对应的原始元素来获取样式
-  //    简化策略：先对原始元素建立标签路径索引
-  const origAllEls = container.querySelectorAll('*');
+  //    clone 中的元素携带 _wc_idx 标记，可直接匹配回原始 DOM 获取计算样式
   const cloneAllEls = clone.querySelectorAll('*');
-
-  // 对非代码块元素尝试索引匹配（不完美但足够用）
-  // 因为代码块之前的元素索引不变，之后的可能偏移
-  // 更好的方案：先给原始 DOM 打标记
-  const tempAttr = '_wc_idx';
-  origAllEls.forEach((el, i) => el.setAttribute(tempAttr, String(i)));
-
-  // 在 clone 里找到有标记的元素直接用
   cloneAllEls.forEach((el) => {
     if (processedEls.has(el)) return;
     const idx = el.getAttribute(tempAttr);
@@ -199,9 +215,6 @@ function inlineStyles(container: Element): string {
       el.removeAttribute(tempAttr);
     }
   });
-
-  // 清除原始 DOM 上的标记
-  origAllEls.forEach((el) => el.removeAttribute(tempAttr));
 
   // 根元素样式
   (clone as HTMLElement).setAttribute('style', getComputedStylesForElement(container));
@@ -238,12 +251,13 @@ function inlineStyles(container: Element): string {
   clone.querySelectorAll('*').forEach((el) => {
     const attrs = Array.from(el.attributes);
     attrs.forEach((attr) => {
-      if (attr.name.startsWith('data-') || attr.name === 'class') {
+      if (attr.name.startsWith('data-') || attr.name === 'class' || attr.name === tempAttr) {
         el.removeAttribute(attr.name);
       }
     });
   });
   clone.removeAttribute('class');
+  clone.removeAttribute(tempAttr);
 
   return clone.outerHTML;
 }
