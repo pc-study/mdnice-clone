@@ -303,10 +303,26 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
           border-collapse: collapse;
           min-width: 100%;
           display: table;
+          word-break: normal;
         }
         .markdown-body table th,
         .markdown-body table td {
           min-width: 80px;
+          padding: 8px 13px;
+          border: 1px solid #dfe2e5;
+          word-break: normal;
+          line-height: 1.6;
+        }
+        .markdown-body table th {
+          font-weight: 600;
+          background-color: #f6f8fa;
+        }
+        .markdown-body table tr {
+          background-color: #fff;
+          border-top: 1px solid #c6cbd1;
+        }
+        .markdown-body table tr:nth-child(2n) {
+          background-color: #f6f8fa;
         }
 
         /* === 行内代码保底样式 === */

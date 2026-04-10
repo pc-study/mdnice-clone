@@ -2,11 +2,13 @@
 function getComputedStylesForElement(el: Element): string {
   const computed = window.getComputedStyle(el);
   const important = [
-    'color', 'background-color', 'font-size', 'font-weight', 'font-style',
+    'color', 'background-color', 'background', 'font-size', 'font-weight', 'font-style',
     'font-family', 'line-height', 'text-align', 'text-decoration', 'margin',
-    'padding', 'border', 'border-left', 'border-bottom', 'border-radius',
-    'display', 'width', 'max-width', 'overflow', 'white-space',
+    'padding', 'border', 'border-left', 'border-right', 'border-top', 'border-bottom',
+    'border-collapse', 'border-spacing', 'border-radius',
+    'display', 'width', 'min-width', 'max-width', 'overflow', 'white-space',
     'list-style-type', 'list-style-position', 'vertical-align',
+    'box-sizing', 'word-break', 'word-wrap',
   ];
   return important.map((prop) => `${prop}:${computed.getPropertyValue(prop)}`).join(';');
 }
@@ -23,6 +25,33 @@ function inlineStyles(container: Element): string {
   });
   // Also set root styles
   (clone as HTMLElement).setAttribute('style', getComputedStylesForElement(container));
+
+  // WeChat special handling: unwrap .table-wrapper divs (WeChat doesn't support overflow-x)
+  clone.querySelectorAll('.table-wrapper').forEach((wrapper) => {
+    const table = wrapper.querySelector('table');
+    if (table) {
+      wrapper.parentNode?.replaceChild(table, wrapper);
+    }
+  });
+
+  // WeChat special handling: ensure every table cell has explicit border
+  clone.querySelectorAll('table').forEach((table) => {
+    const htmlTable = table as HTMLElement;
+    const existingStyle = htmlTable.getAttribute('style') || '';
+    htmlTable.setAttribute('style', existingStyle + ';border-collapse:collapse;width:100%;');
+  });
+  clone.querySelectorAll('th, td').forEach((cell) => {
+    const htmlCell = cell as HTMLElement;
+    const existingStyle = htmlCell.getAttribute('style') || '';
+    // Only add border if not already present with a visible value
+    if (!existingStyle.includes('border:') || existingStyle.includes('border:none') || existingStyle.includes('border: none')) {
+      htmlCell.setAttribute('style', existingStyle + ';border:1px solid #dfe2e5;padding:6px 13px;');
+    }
+  });
+
+  // Remove code copy buttons and line numbers (not useful in WeChat)
+  clone.querySelectorAll('.code-copy-btn').forEach((btn) => btn.remove());
+
   return clone.outerHTML;
 }
 
