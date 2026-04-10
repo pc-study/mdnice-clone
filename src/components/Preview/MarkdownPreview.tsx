@@ -142,6 +142,8 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
         .markdown-body .code-block-body {
           display: flex;
           overflow: auto;
+          width: 100%;
+          box-sizing: border-box;
         }
         .markdown-body .code-line-numbers {
           padding: 14px 0 14px 16px;
@@ -183,6 +185,47 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
           border-collapse: collapse;
           width: auto;
           display: table;
+        }
+        /* === 移动端适配 === */
+        @media (max-width: 768px) {
+          .markdown-body {
+            padding: 12px 12px !important;
+          }
+          .markdown-body .code-block-wrapper {
+            margin: 10px 0;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+          }
+          .markdown-body .code-header {
+            padding: 6px 10px;
+            min-height: 30px;
+          }
+          .markdown-body .code-lang-label {
+            font-size: 11px;
+          }
+          .markdown-body .code-copy-btn {
+            font-size: 11px;
+            padding: 2px 6px;
+          }
+          .markdown-body .code-line-numbers {
+            padding: 10px 0 10px 10px;
+            font-size: 11px;
+            min-width: 22px;
+          }
+          .markdown-body .code-line-numbers span {
+            padding-right: 8px;
+          }
+          .markdown-body .code-block-wrapper pre.hljs {
+            padding: 10px 10px 10px 0 !important;
+          }
+          .markdown-body .code-block-wrapper pre.hljs code {
+            font-size: 11px;
+            line-height: 18px;
+          }
+          .markdown-body .code-mac-dots .dot {
+            width: 10px;
+            height: 10px;
+          }
         }
       `}</style>
       <div

@@ -46,12 +46,12 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, items }) => {
   };
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
       <button
         onClick={handleToggle}
         style={{
           background: open ? '#f0f0f0' : 'none', border: 'none', padding: '6px 12px',
-          cursor: 'pointer', fontSize: 14, color: '#333', borderRadius: 4,
+          cursor: 'pointer', fontSize: 14, color: '#333', borderRadius: 4, whiteSpace: 'nowrap',
         }}
         onMouseEnter={(e) => { if (!open) (e.target as HTMLElement).style.backgroundColor = '#f5f5f5'; }}
         onMouseLeave={(e) => { if (!open) (e.target as HTMLElement).style.backgroundColor = 'transparent'; }}

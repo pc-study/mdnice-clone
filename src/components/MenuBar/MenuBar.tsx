@@ -210,8 +210,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
     <div style={{
       height: 40, backgroundColor: '#fff', borderBottom: '1px solid #e0e0e0',
       display: 'flex', alignItems: 'center', padding: '0 8px', flexShrink: 0,
+      overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch',
     }}>
-      <div style={{ fontWeight: 700, color: '#35b378', marginRight: 20, fontSize: 16, padding: '0 8px' }}>
+      <div style={{ fontWeight: 700, color: '#35b378', marginRight: 20, fontSize: 16, padding: '0 8px', whiteSpace: 'nowrap', flexShrink: 0 }}>
         mdnice-clone
       </div>
       <Dropdown label="文件" items={fileItems} />

@@ -25,18 +25,17 @@ const App: React.FC = () => {
   const editorViewRef = useRef<EditorView | null>(null);
   const { handleEditorScroll, handlePreviewScroll } = useSyncScroll(editorViewRef, previewRef);
 
-  // Responsive: auto-hide sidebar and switch to editor view on narrow screens
+  // Responsive: auto-hide sidebar on narrow screens
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setSidebarVisible(false);
-        setViewMode('editor');
       }
     };
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [setSidebarVisible, setViewMode]);
+  }, [setSidebarVisible]);
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
