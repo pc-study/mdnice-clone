@@ -38,14 +38,24 @@ function inlineStyles(container: Element): string {
   clone.querySelectorAll('table').forEach((table) => {
     const htmlTable = table as HTMLElement;
     const existingStyle = htmlTable.getAttribute('style') || '';
-    htmlTable.setAttribute('style', existingStyle + ';border-collapse:collapse;width:100%;');
+    // Remove computed width/min-width and force 100% width + fixed layout
+    const cleanedStyle = existingStyle
+      .replace(/\bwidth\s*:[^;]+;?/g, '')
+      .replace(/\bmin-width\s*:[^;]+;?/g, '')
+      .replace(/\bmax-width\s*:[^;]+;?/g, '');
+    htmlTable.setAttribute('style', cleanedStyle + ';border-collapse:collapse;width:100%;table-layout:fixed;');
   });
   clone.querySelectorAll('th, td').forEach((cell) => {
     const htmlCell = cell as HTMLElement;
     const existingStyle = htmlCell.getAttribute('style') || '';
+    // Remove computed width/min-width so cells distribute evenly
+    const cleanedStyle = existingStyle
+      .replace(/\bwidth\s*:[^;]+;?/g, '')
+      .replace(/\bmin-width\s*:[^;]+;?/g, '')
+      .replace(/\bmax-width\s*:[^;]+;?/g, '');
     // Only add border if not already present with a visible value
-    if (!existingStyle.includes('border:') || existingStyle.includes('border:none') || existingStyle.includes('border: none')) {
-      htmlCell.setAttribute('style', existingStyle + ';border:1px solid #dfe2e5;padding:6px 13px;');
+    if (!cleanedStyle.includes('border:') || cleanedStyle.includes('border:none') || cleanedStyle.includes('border: none')) {
+      htmlCell.setAttribute('style', cleanedStyle + ';border:1px solid #dfe2e5;padding:6px 13px;');
     }
   });
 
