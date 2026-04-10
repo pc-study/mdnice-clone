@@ -34,12 +34,26 @@ interface MenuBarProps {
   onShowShortcuts?: () => void;
   onShowAbout?: () => void;
   onShowThemeSelector?: () => void;
+  onToggleSidebar?: () => void;
+  sidebarVisible?: boolean;
 }
 
-export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorViewRef, onShowMarkdownHelp, onShowShortcuts, onShowAbout, onShowThemeSelector }) => {
+// Icon button style for the left icon group
+const iconBtnStyle: React.CSSProperties = {
+  background: 'none', border: 'none', cursor: 'pointer',
+  fontSize: 18, color: '#666', padding: '4px 8px', borderRadius: 4,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  flexShrink: 0,
+};
+
+export const MenuBar: React.FC<MenuBarProps> = ({
+  onToast, previewRef, editorViewRef,
+  onShowMarkdownHelp, onShowShortcuts, onShowAbout, onShowThemeSelector,
+  onToggleSidebar, sidebarVisible,
+}) => {
   const { content, setContent, viewMode, setViewMode, fontSize, setFontSize, lineHeight, setLineHeight, wordWrap, setWordWrap } = useEditorStore();
   const { currentTheme, currentCodeTheme, setCurrentCodeTheme, macStyleEnabled, setMacStyleEnabled } = useThemeStore();
-  const { addFile, setActiveFileId, activeFileId, updateFileContent } = useFileStore();
+  const { addFile, setActiveFileId, activeFileId, updateFileContent, files } = useFileStore();
 
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
@@ -47,6 +61,20 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
   const [selectedText, setSelectedText] = useState('');
 
   const toast = (msg: string) => onToast?.(msg);
+
+  // Find active file name for title display
+  const findFileName = (items: typeof files, id: string | null): string => {
+    if (!id) return 'mdnice-clone';
+    for (const f of items) {
+      if (f.id === id) return f.name.replace(/\.md$/, '');
+      if (f.children) {
+        const found = findFileName(f.children, id);
+        if (found !== 'mdnice-clone') return found;
+      }
+    }
+    return 'mdnice-clone';
+  };
+  const docTitle = findFileName(files, activeFileId);
 
   const fileItems = [
     {
@@ -77,8 +105,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
     {
       label: '导出 .md 文件',
       onClick: () => {
-        const filename = activeFileId ? '文章' : '文章';
-        exportMarkdown(content, filename);
+        exportMarkdown(content, docTitle);
         toast('已导出 Markdown 文件');
       },
     },
@@ -87,7 +114,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
       onClick: () => {
         const html = renderMarkdown(content);
         const themeCSS = themes[currentTheme]?.css || '';
-        exportHTML(html, themeCSS, '文章');
+        exportHTML(html, themeCSS, docTitle);
         toast('已导出 HTML 文件');
       },
     },
@@ -124,7 +151,6 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
     { label: '分割线', onClick: () => { if (ev()) insertHorizontalRule(ev()!); } },
     { label: 'TOC 目录', onClick: () => { if (ev()) insertTOC(ev()!); } },
   ];
-
 
   const codeThemeItems: { label: string; checked?: boolean; onClick?: () => void; divider?: boolean }[] = [
     {
@@ -225,33 +251,95 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
   return (
     <div style={{
       height: 40, backgroundColor: '#fff', borderBottom: '1px solid #e0e0e0',
-      display: 'flex', alignItems: 'center', padding: '0 8px', flexShrink: 0,
-      overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+      display: 'flex', alignItems: 'center', padding: '0 4px', flexShrink: 0,
       position: 'relative', zIndex: 100,
     }}>
-      <div style={{ fontWeight: 700, color: '#35b378', marginRight: 20, fontSize: 16, padding: '0 8px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-        mdnice-clone
-      </div>
-      <Dropdown label="文件" items={fileItems} />
-      <Dropdown label="格式" items={formatItems} />
-      <div style={{ flexShrink: 0 }}>
+      {/* Left icon group: sidebar toggle + new + theme */}
+      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, gap: 0 }}>
+        <button
+          onClick={onToggleSidebar}
+          style={iconBtnStyle}
+          title={sidebarVisible ? '收起侧边栏' : '展开侧边栏'}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f0f0f0'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="9" y1="3" x2="9" y2="21" />
+          </svg>
+        </button>
+        <button
+          onClick={() => {
+            const file = addFile('未命名文章.md', null);
+            setActiveFileId(file.id);
+            setContent(file.content || '');
+            toast('已创建新文章');
+          }}
+          style={iconBtnStyle}
+          title="新建文章"
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f0f0f0'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
         <button
           onClick={() => onShowThemeSelector?.()}
-          style={{
-            background: 'none', border: 'none', padding: '6px 12px',
-            cursor: 'pointer', fontSize: 14, color: '#333', borderRadius: 4, whiteSpace: 'nowrap',
-          }}
-          onMouseEnter={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f5f5f5'; }}
-          onMouseLeave={(e) => { (e.target as HTMLElement).style.backgroundColor = 'transparent'; }}
+          style={{ ...iconBtnStyle, fontSize: 13, gap: 2 }}
+          title="选择主题"
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f0f0f0'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
         >
-          主题
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+          <span style={{ fontSize: 12, color: '#666' }}>
+            {themes[currentTheme]?.name || '主题'}
+          </span>
+          <span style={{ fontSize: 10, color: '#999' }}>▾</span>
         </button>
       </div>
-      <Dropdown label="代码主题" items={codeThemeItems} />
-      <Dropdown label="功能" items={functionItems} />
-      <Dropdown label="查看" items={viewItems} />
-      <Dropdown label="设置" items={settingsItems} />
-      <Dropdown label="帮助" items={helpItems} />
+
+      {/* Divider */}
+      <div style={{ width: 1, height: 20, backgroundColor: '#e0e0e0', margin: '0 6px', flexShrink: 0 }} />
+
+      {/* Document title */}
+      <div style={{
+        fontWeight: 600, color: '#333', fontSize: 14, padding: '0 8px',
+        whiteSpace: 'nowrap', flexShrink: 0, maxWidth: 200,
+        overflow: 'hidden', textOverflow: 'ellipsis',
+      }}>
+        {docTitle}
+      </div>
+
+      {/* Divider */}
+      <div style={{ width: 1, height: 20, backgroundColor: '#e0e0e0', margin: '0 2px', flexShrink: 0 }} />
+
+      {/* Menu items */}
+      <div style={{ display: 'flex', alignItems: 'center', flex: 1, overflow: 'hidden' }}>
+        <Dropdown label="文件" items={fileItems} />
+        <Dropdown label="格式" items={formatItems} />
+        <div style={{ flexShrink: 0 }}>
+          <button
+            onClick={() => onShowThemeSelector?.()}
+            style={{
+              background: 'none', border: 'none', padding: '6px 12px',
+              cursor: 'pointer', fontSize: 14, color: '#333', borderRadius: 4, whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f5f5f5'; }}
+            onMouseLeave={(e) => { (e.target as HTMLElement).style.backgroundColor = 'transparent'; }}
+          >
+            主题
+          </button>
+        </div>
+        <Dropdown label="样式" items={codeThemeItems} />
+        <Dropdown label="功能" items={functionItems} />
+        <Dropdown label="查看" items={viewItems} />
+        <Dropdown label="设置" items={settingsItems} />
+        <Dropdown label="帮助" items={helpItems} />
+      </div>
+
+      {/* Dialogs */}
       <TableInsertDialog
         visible={showTableDialog}
         onClose={() => setShowTableDialog(false)}
