@@ -54,37 +54,75 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
         .markdown-body {
           padding: 20px 24px;
         }
+        /* === 代码块整体容器 === */
         .markdown-body .code-block-wrapper {
           position: relative;
           margin: 16px 0;
           border-radius: 8px;
           overflow: hidden;
-          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
         }
+        /* === 顶部 Header 栏 === */
+        .markdown-body .code-header {
+          display: flex;
+          align-items: center;
+          padding: 8px 16px;
+          background: inherit;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          min-height: 36px;
+          box-sizing: border-box;
+        }
+        .markdown-body .code-mac-dots {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-right: 12px;
+          flex-shrink: 0;
+        }
+        .markdown-body .code-mac-dots .dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+        .markdown-body .code-mac-dots .dot.red { background: #fc625d; }
+        .markdown-body .code-mac-dots .dot.yellow { background: #fdbc40; }
+        .markdown-body .code-mac-dots .dot.green { background: #35cd4b; }
         .markdown-body .code-lang-label {
-          position: absolute;
-          top: 8px;
-          right: 12px;
-          font-size: 11px;
-          color: rgba(255,255,255,0.4);
-          padding: 1px 8px;
-          z-index: 1;
-          pointer-events: none;
+          font-size: 13px;
+          color: rgba(255,255,255,0.55);
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+          line-height: 1;
+          flex: 1;
         }
+        .markdown-body .code-copy-btn {
+          background: none;
+          border: none;
+          color: rgba(255,255,255,0.45);
+          font-size: 12px;
+          cursor: pointer;
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+          flex-shrink: 0;
+          transition: color 0.15s, background 0.15s;
+        }
+        .markdown-body .code-copy-btn:hover {
+          color: rgba(255,255,255,0.8);
+          background: rgba(255,255,255,0.1);
+        }
+        /* === 代码内容区 === */
         .markdown-body .code-block-body {
           display: flex;
           overflow: auto;
         }
         .markdown-body .code-line-numbers {
-          padding: 12px 0 12px 12px;
-          min-width: 32px;
+          padding: 14px 0 14px 16px;
+          min-width: 28px;
           text-align: right;
-          color: rgba(255,255,255,0.3);
+          color: rgba(255,255,255,0.25);
           font-size: 13px;
-          line-height: 1.5;
+          line-height: 20px;
           font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
           user-select: none;
           flex-shrink: 0;
@@ -92,22 +130,26 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
         }
         .markdown-body .code-line-numbers span {
           display: block;
-          padding-right: 12px;
+          padding-right: 14px;
         }
         .markdown-body .code-block-wrapper pre.hljs {
           flex: 1;
           margin: 0 !important;
-          padding: 12px 16px 12px 12px !important;
+          padding: 14px 16px 14px 0 !important;
           border-radius: 0 !important;
           box-shadow: none !important;
         }
         .markdown-body .code-block-wrapper pre.hljs code {
           padding: 0 !important;
           font-size: 13px;
-          line-height: 1.5;
+          line-height: 20px;
           font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
           background: transparent !important;
           display: block;
+        }
+        /* === 不显示 Mac 圆点时隐藏 === */
+        .markdown-body:not(.mac-code-theme) .code-mac-dots {
+          display: none;
         }
         .markdown-body img {
           max-width: 100%;
@@ -116,25 +158,6 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
           border-collapse: collapse;
           width: auto;
           display: table;
-        }
-        /* Mac 风格三色圆点 */
-        .markdown-body.mac-code-theme .code-block-wrapper {
-          padding-top: 28px;
-        }
-        .markdown-body.mac-code-theme .code-block-wrapper::before {
-          content: '';
-          position: absolute;
-          top: 9px;
-          left: 14px;
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: #fc625d;
-          box-shadow: 16px 0 0 #fdbc40, 32px 0 0 #35cd4b;
-          z-index: 2;
-        }
-        .markdown-body.mac-code-theme .code-lang-label {
-          top: 6px;
         }
       `}</style>
       <div
