@@ -69,9 +69,10 @@ mdnice-clone/
 │   │       ├── Dropdown.tsx    # 下拉菜单组件
 │   │       └── HelpModal.tsx   # 帮助弹窗（语法速查/快捷键/关于）
 │   ├── themes/
-│   │   └── index.ts            # 20 个排版主题定义
+│   │   ├── css/                # 31 个掘金社区主题 CSS 文件
+│   │   └── index.ts            # 31 个排版主题定义（来源：juejin-markdown-themes）
 │   ├── codeThemes/
-│   │   └── index.ts            # 8 个代码高亮主题注册
+│   │   └── index.ts            # 12 个代码高亮主题（6 标准 + 6 Mac 三色圆点变体）
 │   ├── utils/
 │   │   ├── markdownParser.ts   # markdown-it 配置 + 特殊语法处理
 │   │   ├── editorCommands.ts   # 编辑器命令（加粗/斜体/插入等）
@@ -97,7 +98,7 @@ mdnice-clone/
 ## 关键架构决策
 
 1. **三栏布局**：CSS Flexbox，中间编辑区和右侧预览区通过可拖拽分割线（state: splitPos 百分比）调整宽度
-2. **主题注入**：主题定义为包含完整 CSS 字符串的 TypeScript 对象，切换时通过 `<style>` 标签注入预览区容器
+2. **主题注入**：排版主题来自 juejin-markdown-themes 社区（31 个），CSS 以 `.markdown-body` 为根选择器；代码主题内嵌 CSS 字符串，Mac 变体通过 `isMac` 标记启用三色圆点
 3. **同步滚动**：通过 markdown-it 渲染时添加 `data-line` 属性建立源码行号与 DOM 的映射，使用 useSyncScroll hook 实现
 4. **富文本复制**：将预览区 HTML 的 class 样式转为内联 style，使用 Clipboard API 写入剪贴板
 5. **文件管理**：文件树为嵌套结构（FileItem[]），存储在 Zustand store 中，自动持久化到 localStorage
@@ -125,13 +126,14 @@ mdnice-clone/
 ## 常见维护任务
 
 ### 添加新排版主题
-1. 在 `src/themes/index.ts` 中使用 `generateTheme()` 或手写 CSS 字符串
-2. 在 `themes` 对象中注册
+1. 在 `src/themes/css/` 中创建新的 `.ts` 文件，导出 CSS 字符串（需以 `.markdown-body` 为根选择器）
+2. 在 `src/themes/index.ts` 中导入并注册到 `themes` 对象
 3. `themeList` 会自动包含新主题
 
 ### 添加代码高亮主题
-1. 在 `src/codeThemes/index.ts` 的 `codeThemeList` 数组中添加 `{ id, name }`
-2. id 需对应 highlight.js CDN 上的 CSS 文件名
+1. 在 `src/codeThemes/index.ts` 中添加新的 CSS 字符串常量
+2. 在 `codeThemes` 对象中注册，设置 `id`、`name`、`css`
+3. Mac 变体需额外设置 `isMac: true`
 
 ### 添加 markdown-it 插件
 1. `npm install` 安装插件
