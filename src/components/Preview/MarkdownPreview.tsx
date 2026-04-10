@@ -12,11 +12,11 @@ interface MarkdownPreviewProps {
 
 const COPY_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>';
 
-// 检测代码主题是浅色还是深色（基于 .hljs 背景色亮度）
-function detectLightCodeTheme(css: string): boolean {
+// 从代码主题 CSS 中提取 .hljs 背景色，并判断是否为浅色主题
+function parseCodeThemeBg(css: string): { bgColor: string; isLight: boolean } {
   const bgMatch = css.match(/\.hljs\s*\{[^}]*?background\s*:\s*([^;}]+)/i)
     || css.match(/\.hljs\s*\{[^}]*?background-color\s*:\s*([^;}]+)/i);
-  if (!bgMatch) return false;
+  if (!bgMatch) return { bgColor: '#282c34', isLight: false };
   const bg = bgMatch[1].trim();
   let r = 0, g = 0, b = 0;
   const hexMatch = bg.match(/#([0-9a-fA-F]{3,8})/);
@@ -38,13 +38,13 @@ function detectLightCodeTheme(css: string): boolean {
       g = parseInt(rgbMatch[2]);
       b = parseInt(rgbMatch[3]);
     } else if (/white|#fff\b/i.test(bg)) {
-      return true;
+      return { bgColor: bg, isLight: true };
     } else {
-      return false;
+      return { bgColor: bg, isLight: false };
     }
   }
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5;
+  return { bgColor: bg, isLight: luminance > 0.5 };
 }
 
 export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, previewRef: externalRef }) => {
@@ -63,12 +63,15 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
   // Fetch code theme CSS from CDN with caching
   const [codeThemeCSS, setCodeThemeCSS] = useState('');
   const [isLightCode, setIsLightCode] = useState(false);
+  const [codeBgColor, setCodeBgColor] = useState('#282c34');
   useEffect(() => {
     let cancelled = false;
     fetchCodeThemeCSS(currentCodeTheme).then((css) => {
       if (!cancelled) {
         setCodeThemeCSS(css);
-        setIsLightCode(detectLightCodeTheme(css));
+        const { bgColor, isLight } = parseCodeThemeBg(css);
+        setIsLightCode(isLight);
+        setCodeBgColor(bgColor);
       }
     });
     return () => { cancelled = true; };
@@ -141,6 +144,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
           overflow: hidden;
           border: 1px solid rgba(0,0,0,0.08);
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+          background: ${codeBgColor};
         }
         /* 覆盖排版主题对 pre 的边框/边距/圆角等影响 */
         .markdown-body .code-block-wrapper pre,
