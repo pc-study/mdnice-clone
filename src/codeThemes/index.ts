@@ -2,6 +2,7 @@ export interface CodeThemeDefinition {
   id: string;
   name: string;
   css: string;
+  isMac?: boolean;
 }
 
 const atomOneDarkCss = `/*
@@ -1339,12 +1340,12 @@ export const codeThemes: Record<string, CodeThemeDefinition> = {
   'monokai': { id: 'monokai', name: 'Monokai', css: monokaiCss },
   'vs2015': { id: 'vs2015', name: 'VS 2015', css: vs2015Css },
   'xcode': { id: 'xcode', name: 'Xcode', css: xcodeCss },
-  'macAtomOneDark': { id: 'macAtomOneDark', name: 'Mac Atom One Dark', css: macAtomOneDarkCss },
-  'macAtomOneLight': { id: 'macAtomOneLight', name: 'Mac Atom One Light', css: macAtomOneLightCss },
-  'macGithub': { id: 'macGithub', name: 'Mac GitHub', css: macGithubCss },
-  'macMonokai': { id: 'macMonokai', name: 'Mac Monokai', css: macMonokaiCss },
-  'macVs2015': { id: 'macVs2015', name: 'Mac VS 2015', css: macVs2015Css },
-  'macXcode': { id: 'macXcode', name: 'Mac Xcode', css: macXcodeCss },
+  'macAtomOneDark': { id: 'macAtomOneDark', name: 'Mac Atom One Dark', css: macAtomOneDarkCss, isMac: true },
+  'macAtomOneLight': { id: 'macAtomOneLight', name: 'Mac Atom One Light', css: macAtomOneLightCss, isMac: true },
+  'macGithub': { id: 'macGithub', name: 'Mac GitHub', css: macGithubCss, isMac: true },
+  'macMonokai': { id: 'macMonokai', name: 'Mac Monokai', css: macMonokaiCss, isMac: true },
+  'macVs2015': { id: 'macVs2015', name: 'Mac VS 2015', css: macVs2015Css, isMac: true },
+  'macXcode': { id: 'macXcode', name: 'Mac Xcode', css: macXcodeCss, isMac: true },
 };
 
 export const codeThemeList: { id: string; name: string }[] = [

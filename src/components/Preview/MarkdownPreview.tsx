@@ -26,6 +26,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
   const html = useMemo(() => renderMarkdown(debouncedContent), [debouncedContent]);
   const themeCSS = useMemo(() => themes[currentTheme]?.css || '', [currentTheme]);
   const codeThemeCSS = useMemo(() => codeThemes[currentCodeTheme]?.css || '', [currentCodeTheme]);
+  const isMacCodeTheme = codeThemes[currentCodeTheme]?.isMac || false;
 
   const handleScroll = () => {
     if (onScroll && ref.current) {
@@ -100,9 +101,36 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
           width: auto;
           display: table;
         }
+        .markdown-body.mac-code-theme .code-block-wrapper::before {
+          content: '';
+          display: block;
+          height: 30px;
+          width: 100%;
+          background: inherit;
+          border-radius: 5px 5px 0 0;
+          position: relative;
+        }
+        .markdown-body.mac-code-theme .code-block-wrapper::after {
+          content: '';
+          position: absolute;
+          top: 10px;
+          left: 12px;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: #fc625d;
+          box-shadow: 20px 0 0 #fdbc40, 40px 0 0 #35cd4b;
+          z-index: 2;
+        }
+        .markdown-body.mac-code-theme .code-block-body {
+          margin-top: -7px;
+        }
+        .markdown-body.mac-code-theme .code-lang-label {
+          top: 36px;
+        }
       `}</style>
       <div
-        className="markdown-body"
+        className={`markdown-body${isMacCodeTheme ? ' mac-code-theme' : ''}`}
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>
