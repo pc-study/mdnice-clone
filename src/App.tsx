@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { MenuBar } from './components/MenuBar/MenuBar';
 import { FileTree } from './components/Sidebar/FileTree';
 import { MarkdownEditor } from './components/Editor/MarkdownEditor';
@@ -8,21 +8,33 @@ import { StatusBar } from './components/StatusBar/StatusBar';
 import { Toast } from './components/common/Toast';
 import { useEditorStore } from './store/editorStore';
 import { useFileStore } from './store/fileStore';
+import { copyAsWechat, copyAsZhihu, copyAsJuejin } from './utils/copyToClipboard';
 
 const App: React.FC = () => {
-  const { viewMode } = useEditorStore();
-  const { sidebarVisible } = useFileStore();
-  const [splitPos, setSplitPos] = useState(50); // percentage
+  const { content, viewMode } = useEditorStore();
+  const { sidebarVisible, setSidebarVisible, activeFileId, updateFileContent } = useFileStore();
+  const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const syncingRef = useRef(false);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
     setToastVisible(true);
-  };
+  }, []);
+
+  // Sync editor content changes to the active file in fileStore
+  const prevContentRef = useRef(content);
+  useEffect(() => {
+    if (content !== prevContentRef.current) {
+      prevContentRef.current = content;
+      if (activeFileId) {
+        updateFileContent(activeFileId, content);
+      }
+    }
+  }, [content, activeFileId, updateFileContent]);
 
   const handleMouseDown = useCallback(() => {
     setIsDragging(true);
@@ -54,21 +66,30 @@ const App: React.FC = () => {
     setTimeout(() => { syncingRef.current = false; }, 50);
   }, []);
 
-  const handleCopy = () => {
+  const handleCopyWechat = useCallback(async () => {
     if (previewRef.current) {
-      const el = previewRef.current.querySelector('.preview-theme');
-      if (el) {
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        const sel = window.getSelection();
-        sel?.removeAllRanges();
-        sel?.addRange(range);
-        document.execCommand('copy');
-        sel?.removeAllRanges();
-        showToast('已复制到剪贴板');
-      }
+      try {
+        await copyAsWechat(previewRef.current);
+        showToast('已复制到剪贴板（微信格式）');
+      } catch { showToast('复制失败'); }
     }
-  };
+  }, [showToast]);
+
+  const handleCopyZhihu = useCallback(async () => {
+    if (previewRef.current) {
+      try {
+        await copyAsZhihu(previewRef.current);
+        showToast('已复制到剪贴板（知乎格式）');
+      } catch { showToast('复制失败'); }
+    }
+  }, [showToast]);
+
+  const handleCopyJuejin = useCallback(async () => {
+    try {
+      await copyAsJuejin(content);
+      showToast('已复制到剪贴板（掘金格式）');
+    } catch { showToast('复制失败'); }
+  }, [content, showToast]);
 
   const showEditor = viewMode === 'both' || viewMode === 'editor';
   const showPreview = viewMode === 'both' || viewMode === 'preview';
@@ -79,7 +100,7 @@ const App: React.FC = () => {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <MenuBar />
+      <MenuBar onToast={showToast} previewRef={previewRef} />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Sidebar */}
         {sidebarVisible && (
@@ -87,6 +108,20 @@ const App: React.FC = () => {
             <FileTree />
           </div>
         )}
+        {/* Sidebar toggle */}
+        <div
+          onClick={() => setSidebarVisible(!sidebarVisible)}
+          style={{
+            width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', backgroundColor: '#f7f7f7', borderRight: '1px solid #e0e0e0',
+            flexShrink: 0, fontSize: 10, color: '#999', userSelect: 'none',
+          }}
+          title={sidebarVisible ? '收起侧边栏' : '展开侧边栏'}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#eee')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f7f7f7')}
+        >
+          {sidebarVisible ? '\u25C0' : '\u25B6'}
+        </div>
         {/* Editor */}
         {showEditor && (
           <div style={{
@@ -115,9 +150,9 @@ const App: React.FC = () => {
             flex: 1, position: 'relative', overflow: 'hidden',
           }}>
             <PreviewToolbar
-              onCopyWechat={handleCopy}
-              onCopyZhihu={handleCopy}
-              onCopyJuejin={handleCopy}
+              onCopyWechat={handleCopyWechat}
+              onCopyZhihu={handleCopyZhihu}
+              onCopyJuejin={handleCopyJuejin}
             />
             <MarkdownPreview previewRef={previewRef} />
           </div>
