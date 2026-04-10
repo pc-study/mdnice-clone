@@ -56,50 +56,58 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
         }
         .markdown-body .code-block-wrapper {
           position: relative;
-          margin: 10px 0;
-          border-radius: 5px;
+          margin: 16px 0;
+          border-radius: 8px;
           overflow: hidden;
-          box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 8px;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
         }
         .markdown-body .code-lang-label {
           position: absolute;
-          top: 6px;
+          top: 8px;
           right: 12px;
-          font-size: 12px;
-          color: rgba(255,255,255,0.5);
-          padding: 0 6px;
+          font-size: 11px;
+          color: rgba(255,255,255,0.4);
+          padding: 1px 8px;
           z-index: 1;
           pointer-events: none;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         .markdown-body .code-block-body {
           display: flex;
           overflow: auto;
         }
         .markdown-body .code-line-numbers {
-          padding: 15px 8px 15px 12px;
+          padding: 12px 0 12px 12px;
+          min-width: 32px;
           text-align: right;
-          color: rgba(255,255,255,0.35);
-          font-size: 12px;
-          line-height: 1.75;
-          font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+          color: rgba(255,255,255,0.3);
+          font-size: 13px;
+          line-height: 1.5;
+          font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
           user-select: none;
           flex-shrink: 0;
+          background: inherit;
         }
-        .markdown-body .code-line-numbers span { display: block; }
+        .markdown-body .code-line-numbers span {
+          display: block;
+          padding-right: 12px;
+        }
         .markdown-body .code-block-wrapper pre.hljs {
           flex: 1;
           margin: 0 !important;
+          padding: 12px 16px 12px 12px !important;
           border-radius: 0 !important;
           box-shadow: none !important;
         }
         .markdown-body .code-block-wrapper pre.hljs code {
-          padding: 15px 12px !important;
-          font-size: 12px;
-          line-height: 1.75;
+          padding: 0 !important;
+          font-size: 13px;
+          line-height: 1.5;
+          font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
           background: transparent !important;
-        }
-        .markdown-body .code-line-numbers {
-          background: inherit;
+          display: block;
         }
         .markdown-body img {
           max-width: 100%;
@@ -109,32 +117,24 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
           width: auto;
           display: table;
         }
+        /* Mac 风格三色圆点 */
+        .markdown-body.mac-code-theme .code-block-wrapper {
+          padding-top: 28px;
+        }
         .markdown-body.mac-code-theme .code-block-wrapper::before {
           content: '';
-          display: block;
-          height: 30px;
-          width: 100%;
-          background: inherit;
-          border-radius: 5px 5px 0 0;
-          position: relative;
-        }
-        .markdown-body.mac-code-theme .code-block-wrapper::after {
-          content: '';
           position: absolute;
-          top: 10px;
-          left: 12px;
-          width: 12px;
-          height: 12px;
+          top: 9px;
+          left: 14px;
+          width: 10px;
+          height: 10px;
           border-radius: 50%;
           background: #fc625d;
-          box-shadow: 20px 0 0 #fdbc40, 40px 0 0 #35cd4b;
+          box-shadow: 16px 0 0 #fdbc40, 32px 0 0 #35cd4b;
           z-index: 2;
         }
-        .markdown-body.mac-code-theme .code-block-body {
-          margin-top: -7px;
-        }
         .markdown-body.mac-code-theme .code-lang-label {
-          top: 36px;
+          top: 6px;
         }
       `}</style>
       <div
