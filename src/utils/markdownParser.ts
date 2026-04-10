@@ -11,8 +11,7 @@ const md: MarkdownIt = new MarkdownIt({
   typographer: true,
   highlight: function (str: string, lang: string): string {
     const langDisplay = lang || '';
-    const copyIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
-    const headerHtml = `<div class="code-header"><span class="code-mac-dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></span><span class="code-lang-label">${langDisplay}</span><button class="code-copy-btn" onclick="(function(btn){var code=btn.closest('.code-block-wrapper').querySelector('code');if(code){navigator.clipboard.writeText(code.textContent||'').then(function(){btn.textContent='已复制';setTimeout(function(){btn.innerHTML='${copyIcon.replace(/'/g, "\\'")}复制'},1500)})}})(this)">${copyIcon}复制</button></div>`;
+    const headerHtml = `<div class="code-header"><span class="code-mac-dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></span><span class="code-lang-label">${langDisplay}</span><button class="code-copy-btn" data-copy="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>复制</button></div>`;
     if (lang && hljs.getLanguage(lang)) {
       try {
         const result = hljs.highlight(str, { language: lang, ignoreIllegals: true });

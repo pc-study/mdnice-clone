@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { themes } from '../../themes';
@@ -9,6 +9,8 @@ interface MarkdownPreviewProps {
   onScroll?: (info: { scrollTop: number; scrollHeight: number; clientHeight: number }) => void;
   previewRef?: React.RefObject<HTMLDivElement | null>;
 }
+
+const COPY_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>';
 
 export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, previewRef: externalRef }) => {
   const content = useEditorStore((s) => s.content);
@@ -46,6 +48,22 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
     }
   };
 
+  // Event delegation for copy buttons
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    const btn = (e.target as HTMLElement).closest('.code-copy-btn') as HTMLButtonElement | null;
+    if (!btn) return;
+    const wrapper = btn.closest('.code-block-wrapper');
+    const codeEl = wrapper?.querySelector('code');
+    if (codeEl) {
+      navigator.clipboard.writeText(codeEl.textContent || '').then(() => {
+        btn.textContent = '已复制';
+        setTimeout(() => {
+          btn.innerHTML = COPY_SVG + '复制';
+        }, 1500);
+      });
+    }
+  }, []);
+
   return (
     <div style={{ height: '100%', overflow: 'auto', backgroundColor: '#fff' }} ref={ref} onScroll={handleScroll}>
       <style>{themeCSS}</style>
@@ -61,6 +79,15 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
           border-radius: 8px;
           overflow: hidden;
           box-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
+        }
+        /* 覆盖排版主题对 pre 的边框/边距/圆角等影响 */
+        .markdown-body .code-block-wrapper pre,
+        .markdown-body .code-block-wrapper pre.hljs {
+          border: none !important;
+          outline: none !important;
+          margin: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
         }
         /* === 顶部 Header 栏 === */
         .markdown-body .code-header {
@@ -134,10 +161,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
         }
         .markdown-body .code-block-wrapper pre.hljs {
           flex: 1;
-          margin: 0 !important;
           padding: 14px 16px 14px 0 !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
         }
         .markdown-body .code-block-wrapper pre.hljs code {
           padding: 0 !important;
@@ -146,6 +170,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
           font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
           background: transparent !important;
           display: block;
+          border: none !important;
         }
         /* === 不显示 Mac 圆点时隐藏 === */
         .markdown-body:not(.mac-code-theme) .code-mac-dots {
@@ -163,6 +188,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
       <div
         className={`markdown-body${macStyleEnabled ? ' mac-code-theme' : ''}`}
         dangerouslySetInnerHTML={{ __html: html }}
+        onClick={handleClick}
       />
     </div>
   );
