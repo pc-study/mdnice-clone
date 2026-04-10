@@ -8,7 +8,7 @@
 
 - 📝 基于 CodeMirror 6 的 Markdown 编辑器，支持语法高亮和快捷键
 - 👀 基于 markdown-it 的实时预览，支持数学公式（KaTeX）、代码高亮
-- 🎨 31 个掘金社区排版主题（juejin-markdown-themes），一键切换
+- 🎨 62 个排版主题（32 个掘金社区主题 + 30 个 mdnice 原版主题），卡片式主题选择器
 - 🖥 268 个代码高亮主题（highlight.js CDN 加载），支持 Mac 三色圆点样式
 - 📋 一键复制为微信公众号 / 知乎 / 掘金格式
 - 📁 本地文件管理系统，支持文件夹和多文件，右键上下文菜单
@@ -76,8 +76,9 @@ src/
 │   ├── StatusBar/       # 底部状态栏（行数、字数、字符数）
 │   └── common/          # 通用组件（Toast、Modal、Dropdown、HelpModal）
 ├── themes/
-│   ├── css/             # 31 个掘金社区排版主题 CSS 文件
-│   └── index.ts         # 主题定义与注册
+│   ├── juejin/          # 32 个掘金社区排版主题 CSS 文件
+│   ├── mdnice/          # 30 个 mdnice 原版排版主题 CSS 文件
+│   └── index.ts         # 主题定义与注册（分组导出）
 ├── codeThemes/          # 代码高亮主题（CDN 加载 268 个 + Mac 三色圆点开关）
 ├── utils/               # 工具函数（Markdown 解析、复制、格式化、外链转脚注等）
 ├── store/               # Zustand 状态管理（editor / theme / file）

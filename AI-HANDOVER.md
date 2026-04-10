@@ -54,6 +54,8 @@ mdnice-clone/
 │   ├── components/
 │   │   ├── MenuBar/
 │   │   │   └── MenuBar.tsx     # 顶部菜单栏（文件/格式/主题/功能/查看/设置/帮助）
+│   │   ├── ThemeSelector/
+│   │   │   └── ThemeSelector.tsx # 主题选择弹窗（卡片预览/分组/搜索）
 │   │   ├── Sidebar/
 │   │   │   └── FileTree.tsx    # 左侧文件管理面板
 │   │   ├── Editor/
@@ -69,8 +71,9 @@ mdnice-clone/
 │   │       ├── Dropdown.tsx    # 下拉菜单组件
 │   │       └── HelpModal.tsx   # 帮助弹窗（语法速查/快捷键/关于）
 │   ├── themes/
-│   │   ├── css/                # 31 个掘金社区主题 CSS 文件
-│   │   └── index.ts            # 31 个排版主题定义（来源：juejin-markdown-themes）
+│   │   ├── juejin/            # 32 个掘金社区主题 CSS 文件
+│   │   ├── mdnice/            # 30 个 mdnice 原版主题 CSS 文件
+│   │   └── index.ts            # 62 个排版主题定义（掘金 + mdnice 两组）
 │   ├── codeThemes/
 │   │   └── index.ts            # 12 个代码高亮主题（6 标准 + 6 Mac 三色圆点变体）
 │   ├── utils/
@@ -98,7 +101,7 @@ mdnice-clone/
 ## 关键架构决策
 
 1. **三栏布局**：CSS Flexbox，中间编辑区和右侧预览区通过可拖拽分割线（state: splitPos 百分比）调整宽度
-2. **主题注入**：排版主题来自 juejin-markdown-themes 社区（31 个），CSS 以 `.markdown-body` 为根选择器；代码主题内嵌 CSS 字符串，Mac 变体通过 `isMac` 标记启用三色圆点
+2. **主题注入**：排版主题分两组——juejin-markdown-themes 社区（32 个）和 mdnice 原版（30 个），共 62 个，CSS 以 `.markdown-body` 为根选择器；主题选择通过 ThemeSelector 弹窗组件实现，卡片式预览、按来源分组、支持搜索；代码主题通过 CDN 加载（268 个），Mac 三色圆点为独立开关
 3. **同步滚动**：通过 markdown-it 渲染时添加 `data-line` 属性建立源码行号与 DOM 的映射，使用 useSyncScroll hook 实现
 4. **富文本复制**：将预览区 HTML 的 class 样式转为内联 style，使用 Clipboard API 写入剪贴板
 5. **文件管理**：文件树为嵌套结构（FileItem[]），存储在 Zustand store 中，自动持久化到 localStorage
@@ -126,9 +129,9 @@ mdnice-clone/
 ## 常见维护任务
 
 ### 添加新排版主题
-1. 在 `src/themes/css/` 中创建新的 `.ts` 文件，导出 CSS 字符串（需以 `.markdown-body` 为根选择器）
-2. 在 `src/themes/index.ts` 中导入并注册到 `themes` 对象
-3. `themeList` 会自动包含新主题
+1. 在 `src/themes/juejin/` 或 `src/themes/mdnice/` 中创建新的 `.ts` 文件，导出 CSS 字符串（需以 `.markdown-body` 为根选择器）
+2. 在 `src/themes/index.ts` 中导入并注册到 `themes` 对象，设置 `group: 'juejin'` 或 `group: 'mdnice'`
+3. `themeList` 会自动包含新主题，ThemeSelector 弹窗会按分组显示
 
 ### 添加代码高亮主题
 1. 在 `src/codeThemes/index.ts` 中添加新的 CSS 字符串常量
