@@ -13,10 +13,7 @@ interface ThemeState {
 
 // Migrate legacy code theme IDs on load
 function migrateSavedCodeTheme(): { codeTheme: string; macEnabled: boolean } {
-  let savedCodeTheme = localStorage.getItem('mdnice-codeTheme') || 'atom-one-dark';
-
-  // Detect if old value was a mac variant
-  const wasMac = savedCodeTheme.startsWith('mac');
+  let savedCodeTheme = localStorage.getItem('mdnice-codeTheme') || 'vs2015';
 
   // Migrate legacy ID to new CDN-compatible ID
   if (legacyThemeMap[savedCodeTheme]) {
@@ -26,7 +23,7 @@ function migrateSavedCodeTheme(): { codeTheme: string; macEnabled: boolean } {
 
   // Migrate mac style preference
   const savedMacStyle = localStorage.getItem('mdnice-macStyle');
-  const macEnabled = savedMacStyle !== null ? savedMacStyle === 'true' : wasMac;
+  const macEnabled = savedMacStyle !== null ? savedMacStyle === 'true' : true;
 
   return { codeTheme: savedCodeTheme, macEnabled };
 }
