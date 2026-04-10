@@ -148,9 +148,8 @@ const App: React.FC = () => {
         {/* Editor */}
         {showEditor && (
           <div style={{
-            width: showPreview ? `${splitPos}%` : '100%',
-            flexShrink: 0, overflow: 'hidden',
-            borderRight: showPreview ? 'none' : undefined,
+            width: showPreview ? `calc(${splitPos}% - 2px)` : '100%',
+            flexShrink: 0, flexGrow: 0, overflow: 'hidden',
           }}>
             <MarkdownEditor onScroll={handleEditorScroll} editorViewRef={editorViewRef} />
           </div>
@@ -161,7 +160,7 @@ const App: React.FC = () => {
             onMouseDown={handleMouseDown}
             style={{
               width: 4, cursor: 'col-resize', backgroundColor: isDragging ? '#35b378' : '#e0e0e0',
-              flexShrink: 0, transition: isDragging ? 'none' : 'background-color 0.2s',
+              flexShrink: 0, flexGrow: 0, transition: isDragging ? 'none' : 'background-color 0.2s',
             }}
             onMouseEnter={(e) => { if (!isDragging) e.currentTarget.style.backgroundColor = '#ccc'; }}
             onMouseLeave={(e) => { if (!isDragging) e.currentTarget.style.backgroundColor = '#e0e0e0'; }}
@@ -170,7 +169,8 @@ const App: React.FC = () => {
         {/* Preview */}
         {showPreview && (
           <div style={{
-            flex: 1, position: 'relative', overflow: 'hidden',
+            width: showEditor ? `calc(${100 - splitPos}% - 2px)` : '100%',
+            flexShrink: 0, flexGrow: 0, position: 'relative', overflow: 'hidden',
           }}>
             <PreviewToolbar
               onCopyWechat={handleCopyWechat}
