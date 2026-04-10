@@ -31,6 +31,26 @@ md.use(taskLists, { enabled: true });
 md.use(sub);
 md.use(sup);
 
+// Override fence rule to use highlight output directly (avoid markdown-it wrapping in <pre><code>)
+md.renderer.rules.fence = function(tokens: any[], idx: number, options: any, _env: any, _self: any) {
+  const token = tokens[idx];
+  const info = token.info ? token.info.trim() : '';
+  const lang = info.split(/\s+/g)[0] || '';
+  const str = token.content;
+  if (options.highlight) {
+    const highlighted = options.highlight(str, lang, '');
+    if (highlighted) {
+      // Add data-line attribute for sync scrolling
+      if (token.map && token.map.length) {
+        return highlighted.replace(/^<div /, `<div data-line="${token.map[0]}" `);
+      }
+      return highlighted;
+    }
+  }
+  // Fallback
+  return `<pre><code>${md.utils.escapeHtml(str)}</code></pre>`;
+};
+
 // Add data-line attributes for sync scrolling
 const defaultRender = md.renderer.rules.paragraph_open || function(tokens: any[], idx: number, options: any, _env: any, self: any) {
   return self.renderToken(tokens, idx, options);
