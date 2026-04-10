@@ -19,6 +19,8 @@ const DEFAULT_CONTENT = `# 欢迎使用 mdnice-clone
 >
 > 本文涵盖所有支持的 Markdown 语法，可直接复制到微信公众号中预览效果。
 
+[TOC]
+
 ## 1 基础语法
 
 ### 1.1 标题

@@ -168,8 +168,48 @@ function postprocessImageSize(html: string): string {
   );
 }
 
+// Post-process: TOC (Table of Contents)
+// Replaces [TOC] placeholder with a generated table of contents from h2/h3 headings
+function postprocessTOC(html: string): string {
+  if (!html.includes('%%TOC_PLACEHOLDER%%')) return html;
+
+  // Extract h2 and h3 headings from rendered HTML
+  const headingRe = /<h([23])[^>]*>([\s\S]*?)<\/h\1>/gi;
+  const headings: { level: number; text: string }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = headingRe.exec(html)) !== null) {
+    // Strip HTML tags from heading text
+    const text = m[2].replace(/<[^>]+>/g, '').trim();
+    if (text) {
+      headings.push({ level: parseInt(m[1]), text });
+    }
+  }
+
+  if (headings.length === 0) {
+    return html.replace(/%%TOC_PLACEHOLDER%%/g, '');
+  }
+
+  // Generate TOC HTML as nested list
+  let toc = '<div class="toc-container" style="padding:12px 20px;margin:16px 0;border-radius:6px;background:#f8f9fa;border:1px solid #e9ecef;">\n';
+  toc += '<p style="font-weight:600;margin:0 0 8px;color:#333;">目录</p>\n<ul style="list-style:none;padding:0;margin:0;">\n';
+
+  for (const h of headings) {
+    const indent = h.level === 3 ? 'padding-left:20px;' : '';
+    const fontSize = h.level === 3 ? 'font-size:13px;' : 'font-size:14px;';
+    toc += `<li style="${indent}${fontSize}line-height:2;color:#555;">${h.text}</li>\n`;
+  }
+
+  toc += '</ul>\n</div>';
+
+  return html.replace(/%%TOC_PLACEHOLDER%%/g, toc);
+}
+
 export function renderMarkdown(source: string): string {
   let processed = source;
+
+  // Pre-process: replace [TOC] with placeholder (before math extraction to avoid conflicts)
+  processed = processed.replace(/^\[TOC\]\s*$/gm, '%%TOC_PLACEHOLDER%%');
+
   const mathBlocks: string[] = [];
   // Block math
   processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, (_match: string) => {
@@ -201,6 +241,9 @@ export function renderMarkdown(source: string): string {
 
   // Post-process: image sizes
   html = postprocessImageSize(html);
+
+  // Post-process: TOC
+  html = postprocessTOC(html);
 
   return html;
 }
