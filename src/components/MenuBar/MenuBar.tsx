@@ -11,13 +11,26 @@ import { formatDocument } from '../../utils/formatDocument';
 import { convertLinksToFootnotes } from '../../utils/footnotesConverter';
 import { renderMarkdown } from '../../utils/markdownParser';
 import { themes } from '../../themes';
+import { EditorView } from '@codemirror/view';
+import {
+  wrapSelection,
+  prefixLines,
+  prefixLinesOrdered,
+  insertCodeBlock,
+  insertLink,
+  insertImage,
+  insertTable,
+  insertHorizontalRule,
+  insertInlineCode,
+} from '../../utils/editorCommands';
 
 interface MenuBarProps {
   onToast?: (msg: string) => void;
   previewRef?: React.RefObject<HTMLDivElement | null>;
+  editorViewRef?: React.MutableRefObject<EditorView | null>;
 }
 
-export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef }) => {
+export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorViewRef }) => {
   const { content, setContent, viewMode, setViewMode, fontSize, setFontSize, lineHeight, setLineHeight, wordWrap, setWordWrap } = useEditorStore();
   const { currentTheme, setCurrentTheme, currentCodeTheme, setCurrentCodeTheme } = useThemeStore();
   const { addFile, setActiveFileId, activeFileId, updateFileContent } = useFileStore();
@@ -69,21 +82,23 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef }) => {
     },
   ];
 
+  const ev = () => editorViewRef?.current;
+
   const formatItems = [
-    { label: '加粗', shortcut: 'Ctrl+B', onClick: () => {} },
-    { label: '斜体', shortcut: 'Ctrl+I', onClick: () => {} },
-    { label: '删除线', shortcut: 'Ctrl+D', onClick: () => {} },
+    { label: '加粗', shortcut: 'Ctrl+B', onClick: () => { if (ev()) wrapSelection(ev()!, '**', '**'); } },
+    { label: '斜体', shortcut: 'Ctrl+I', onClick: () => { if (ev()) wrapSelection(ev()!, '*', '*'); } },
+    { label: '删除线', shortcut: 'Ctrl+D', onClick: () => { if (ev()) wrapSelection(ev()!, '~~', '~~'); } },
     { divider: true, label: '' },
-    { label: '有序列表', shortcut: 'Ctrl+Shift+O', onClick: () => {} },
-    { label: '无序列表', shortcut: 'Ctrl+Shift+U', onClick: () => {} },
-    { label: '引用', shortcut: 'Ctrl+Shift+Q', onClick: () => {} },
+    { label: '有序列表', shortcut: 'Ctrl+Shift+O', onClick: () => { if (ev()) prefixLinesOrdered(ev()!); } },
+    { label: '无序列表', shortcut: 'Ctrl+Shift+U', onClick: () => { if (ev()) prefixLines(ev()!, '- '); } },
+    { label: '引用', shortcut: 'Ctrl+Shift+Q', onClick: () => { if (ev()) prefixLines(ev()!, '> '); } },
     { divider: true, label: '' },
-    { label: '代码块', shortcut: 'Ctrl+Shift+C', onClick: () => {} },
-    { label: '行内代码', onClick: () => {} },
-    { label: '链接', shortcut: 'Ctrl+K', onClick: () => {} },
-    { label: '图片', shortcut: 'Ctrl+Shift+I', onClick: () => {} },
-    { label: '表格', onClick: () => {} },
-    { label: '分割线', onClick: () => {} },
+    { label: '代码块', shortcut: 'Ctrl+Shift+C', onClick: () => { if (ev()) insertCodeBlock(ev()!); } },
+    { label: '行内代码', onClick: () => { if (ev()) insertInlineCode(ev()!); } },
+    { label: '链接', shortcut: 'Ctrl+K', onClick: () => { if (ev()) insertLink(ev()!); } },
+    { label: '图片', shortcut: 'Ctrl+Shift+I', onClick: () => { if (ev()) insertImage(ev()!); } },
+    { label: '表格', onClick: () => { if (ev()) insertTable(ev()!); } },
+    { label: '分割线', onClick: () => { if (ev()) insertHorizontalRule(ev()!); } },
   ];
 
   const themeItems = themeList.map((t) => ({

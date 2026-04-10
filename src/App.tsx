@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { EditorView } from '@codemirror/view';
 import { MenuBar } from './components/MenuBar/MenuBar';
 import { FileTree } from './components/Sidebar/FileTree';
 import { MarkdownEditor } from './components/Editor/MarkdownEditor';
@@ -9,6 +10,7 @@ import { Toast } from './components/common/Toast';
 import { useEditorStore } from './store/editorStore';
 import { useFileStore } from './store/fileStore';
 import { copyAsWechat, copyAsZhihu, copyAsJuejin } from './utils/copyToClipboard';
+import { useSyncScroll } from './hooks/useSyncScroll';
 
 const App: React.FC = () => {
   const { content, viewMode } = useEditorStore();
@@ -18,7 +20,8 @@ const App: React.FC = () => {
   const [toastMsg, setToastMsg] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
-  const syncingRef = useRef(false);
+  const editorViewRef = useRef<EditorView | null>(null);
+  const { handleEditorScroll, handlePreviewScroll } = useSyncScroll(editorViewRef, previewRef);
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -55,16 +58,7 @@ const App: React.FC = () => {
     setIsDragging(false);
   }, []);
 
-  // Sync scroll handlers
-  const handleEditorScroll = useCallback((info: { scrollTop: number; scrollHeight: number; clientHeight: number }) => {
-    if (syncingRef.current) return;
-    syncingRef.current = true;
-    if (previewRef.current) {
-      const ratio = info.scrollTop / (info.scrollHeight - info.clientHeight || 1);
-      previewRef.current.scrollTop = ratio * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
-    }
-    setTimeout(() => { syncingRef.current = false; }, 50);
-  }, []);
+  // Sync scroll handled by useSyncScroll hook
 
   const handleCopyWechat = useCallback(async () => {
     if (previewRef.current) {
@@ -100,7 +94,7 @@ const App: React.FC = () => {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <MenuBar onToast={showToast} previewRef={previewRef} />
+      <MenuBar onToast={showToast} previewRef={previewRef} editorViewRef={editorViewRef} />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Sidebar */}
         {sidebarVisible && (
@@ -129,7 +123,7 @@ const App: React.FC = () => {
             flexShrink: 0, overflow: 'hidden',
             borderRight: showPreview ? 'none' : undefined,
           }}>
-            <MarkdownEditor onScroll={handleEditorScroll} />
+            <MarkdownEditor onScroll={handleEditorScroll} editorViewRef={editorViewRef} />
           </div>
         )}
         {/* Splitter */}
@@ -154,7 +148,7 @@ const App: React.FC = () => {
               onCopyZhihu={handleCopyZhihu}
               onCopyJuejin={handleCopyJuejin}
             />
-            <MarkdownPreview previewRef={previewRef} />
+            <MarkdownPreview previewRef={previewRef} onScroll={handlePreviewScroll} />
           </div>
         )}
       </div>

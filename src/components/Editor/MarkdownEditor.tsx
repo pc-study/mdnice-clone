@@ -8,6 +8,14 @@ import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { languages } from '@codemirror/language-data';
 import { syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
 import { useEditorStore } from '../../store/editorStore';
+import {
+  wrapSelection,
+  prefixLines,
+  prefixLinesOrdered,
+  insertCodeBlock,
+  insertLink,
+  insertImage,
+} from '../../utils/editorCommands';
 
 interface MarkdownEditorProps {
   onScroll?: (info: { scrollTop: number; scrollHeight: number; clientHeight: number }) => void;
@@ -53,6 +61,15 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({ onScroll, editor
         syntaxHighlighting(defaultHighlightStyle),
         markdown({ codeLanguages: languages }),
         keymap.of([
+          { key: 'Mod-b', run: (v) => { wrapSelection(v, '**', '**'); return true; } },
+          { key: 'Mod-i', run: (v) => { wrapSelection(v, '*', '*'); return true; } },
+          { key: 'Mod-d', run: (v) => { wrapSelection(v, '~~', '~~'); return true; } },
+          { key: 'Mod-k', run: (v) => { insertLink(v); return true; } },
+          { key: 'Mod-Shift-i', run: (v) => { insertImage(v); return true; } },
+          { key: 'Mod-Shift-c', run: (v) => { insertCodeBlock(v); return true; } },
+          { key: 'Mod-Shift-o', run: (v) => { prefixLinesOrdered(v); return true; } },
+          { key: 'Mod-Shift-u', run: (v) => { prefixLines(v, '- '); return true; } },
+          { key: 'Mod-Shift-q', run: (v) => { prefixLines(v, '> '); return true; } },
           ...defaultKeymap,
           ...historyKeymap,
           ...searchKeymap,

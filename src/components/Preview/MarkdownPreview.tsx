@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { themes } from '../../themes';
@@ -15,7 +15,14 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
   const internalRef = useRef<HTMLDivElement>(null);
   const ref = externalRef || internalRef;
 
-  const html = useMemo(() => renderMarkdown(content), [content]);
+  // Debounced content for rendering (300ms)
+  const [debouncedContent, setDebouncedContent] = useState(content);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedContent(content), 300);
+    return () => clearTimeout(timer);
+  }, [content]);
+
+  const html = useMemo(() => renderMarkdown(debouncedContent), [debouncedContent]);
   const themeCSS = useMemo(() => themes[currentTheme]?.css || '', [currentTheme]);
 
   useEffect(() => {
