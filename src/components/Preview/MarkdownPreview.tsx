@@ -50,7 +50,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
         .hljs { flex: 1; margin: 0; }
       `}</style>
       <div
-        id="nice"
+        className="markdown-body"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>

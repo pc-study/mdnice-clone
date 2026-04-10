@@ -1,102 +1,109 @@
+import juejin_css from './css/juejin';
+import github_css from './css/github';
+import smartblue_css from './css/smartblue';
+import cyanosis_css from './css/cyanosis';
+import channing_cyan_css from './css/channing-cyan';
+import fancy_css from './css/fancy';
+import hydrogen_css from './css/hydrogen';
+import condensed_night_purple_css from './css/condensed-night-purple';
+import greenwillow_css from './css/greenwillow';
+import v_green_css from './css/v-green';
+import vue_pro_css from './css/vue-pro';
+import healer_readable_css from './css/healer-readable';
+import mk_cute_css from './css/mk-cute';
+import jzman_css from './css/jzman';
+import geek_black_css from './css/geek-black';
+import awesome_green_css from './css/awesome-green';
+import qklhk_chocolate_css from './css/qklhk-chocolate';
+import orange_css from './css/orange';
+import scrolls_light_css from './css/scrolls-light';
+import simplicity_green_css from './css/simplicity-green';
+import arknights_css from './css/arknights';
+import vuepress_css from './css/vuepress';
+import Chinese_red_css from './css/Chinese-red';
+import nico_css from './css/nico';
+import devui_blue_css from './css/devui-blue';
+import serene_rose_css from './css/serene-rose';
+import z_blue_css from './css/z-blue';
+import minimalism_css from './css/minimalism';
+import koi_css from './css/koi';
+import yu_css from './css/yu';
+import lilsnake_css from './css/lilsnake';
+import keepnice_css from './css/keepnice';
+
 export interface ThemeDefinition {
   id: string;
   name: string;
   css: string;
+  highlight?: string;
 }
 
-import theme_3060_css from './css/theme_3060';
-import theme_3050_css from './css/theme_3050';
-import theme_1377_css from './css/theme_1377';
-import theme_1348_css from './css/theme_1348';
-import theme_11773_css from './css/theme_11773';
-import theme_1_css from './css/theme_1';
-import theme_3_css from './css/theme_3';
-import theme_4_css from './css/theme_4';
-import theme_5_css from './css/theme_5';
-import theme_6_css from './css/theme_6';
-import theme_8_css from './css/theme_8';
-import theme_10_css from './css/theme_10';
-import theme_11_css from './css/theme_11';
-import theme_12_css from './css/theme_12';
-import theme_13_css from './css/theme_13';
-import theme_15_css from './css/theme_15';
-import theme_16_css from './css/theme_16';
-import theme_17_css from './css/theme_17';
-import theme_18_css from './css/theme_18';
-import theme_19_css from './css/theme_19';
-import theme_33_css from './css/theme_33';
-import theme_35_css from './css/theme_35';
-import theme_42_css from './css/theme_42';
-import theme_44_css from './css/theme_44';
-import theme_45_css from './css/theme_45';
-import theme_48_css from './css/theme_48';
-import theme_51_css from './css/theme_51';
-import theme_62_css from './css/theme_62';
-import theme_63_css from './css/theme_63';
-import theme_1653_css from './css/theme_1653';
-
 export const themes: Record<string, ThemeDefinition> = {
-  '3060': { id: '3060', name: '重影', css: theme_3060_css },
-  '3050': { id: '3050', name: '丘比特忙', css: theme_3050_css },
-  '1377': { id: '1377', name: '奇点', css: theme_1377_css },
-  '1348': { id: '1348', name: '雁栖湖', css: theme_1348_css },
-  '11773': { id: '11773', name: '柠檬黄', css: theme_11773_css },
-  '1': { id: '1', name: '橙心', css: theme_1_css },
-  '3': { id: '3', name: '姹紫', css: theme_3_css },
-  '4': { id: '4', name: '嫩青', css: theme_4_css },
-  '5': { id: '5', name: '绿意', css: theme_5_css },
-  '6': { id: '6', name: '红绯', css: theme_6_css },
-  '8': { id: '8', name: '蓝莹', css: theme_8_css },
-  '10': { id: '10', name: '兰青', css: theme_10_css },
-  '11': { id: '11', name: '山吹', css: theme_11_css },
-  '12': { id: '12', name: '前端之巅同款', css: theme_12_css },
-  '13': { id: '13', name: '极客黑', css: theme_13_css },
-  '15': { id: '15', name: '蔷薇紫', css: theme_15_css },
-  '16': { id: '16', name: '萌绿', css: theme_16_css },
-  '17': { id: '17', name: '全栈蓝', css: theme_17_css },
-  '18': { id: '18', name: '极简黑', css: theme_18_css },
-  '19': { id: '19', name: '橙蓝风', css: theme_19_css },
-  '33': { id: '33', name: 'Pornhub黄', css: theme_33_css },
-  '35': { id: '35', name: '凝夜紫', css: theme_35_css },
-  '42': { id: '42', name: '萌粉', css: theme_42_css },
-  '44': { id: '44', name: 'Obsidian', css: theme_44_css },
-  '45': { id: '45', name: '灵动蓝', css: theme_45_css },
-  '48': { id: '48', name: '草原绿', css: theme_48_css },
-  '51': { id: '51', name: '科技蓝', css: theme_51_css },
-  '62': { id: '62', name: 'WeFormat', css: theme_62_css },
-  '63': { id: '63', name: '简', css: theme_63_css },
-  '1653': { id: '1653', name: '锤子便签主题第2版', css: theme_1653_css },
+  'juejin': { id: 'juejin', name: 'juejin', css: juejin_css, highlight: 'juejin' },
+  'github': { id: 'github', name: 'github', css: github_css, highlight: 'github' },
+  'smartblue': { id: 'smartblue', name: 'smartblue', css: smartblue_css },
+  'cyanosis': { id: 'cyanosis', name: 'cyanosis', css: cyanosis_css, highlight: 'atom-one-dark' },
+  'channing-cyan': { id: 'channing-cyan', name: 'channing-cyan', css: channing_cyan_css },
+  'fancy': { id: 'fancy', name: 'fancy', css: fancy_css },
+  'hydrogen': { id: 'hydrogen', name: 'hydrogen', css: hydrogen_css },
+  'condensed-night-purple': { id: 'condensed-night-purple', name: 'condensed-night-purple', css: condensed_night_purple_css, highlight: 'github-gist' },
+  'greenwillow': { id: 'greenwillow', name: 'greenwillow', css: greenwillow_css },
+  'v-green': { id: 'v-green', name: 'v-green', css: v_green_css },
+  'vue-pro': { id: 'vue-pro', name: 'vue-pro', css: vue_pro_css, highlight: 'monokai' },
+  'healer-readable': { id: 'healer-readable', name: 'healer-readable', css: healer_readable_css, highlight: 'srcery' },
+  'mk-cute': { id: 'mk-cute', name: 'mk-cute', css: mk_cute_css },
+  'jzman': { id: 'jzman', name: 'jzman', css: jzman_css, highlight: 'monokai' },
+  'geek-black': { id: 'geek-black', name: 'geek-black', css: geek_black_css, highlight: 'monokai' },
+  'awesome-green': { id: 'awesome-green', name: 'awesome-green', css: awesome_green_css },
+  'qklhk-chocolate': { id: 'qklhk-chocolate', name: 'qklhk-chocolate', css: qklhk_chocolate_css },
+  'orange': { id: 'orange', name: 'orange', css: orange_css, highlight: 'atom-one-light' },
+  'scrolls-light': { id: 'scrolls-light', name: 'scrolls-light', css: scrolls_light_css },
+  'simplicity-green': { id: 'simplicity-green', name: 'simplicity-green', css: simplicity_green_css },
+  'arknights': { id: 'arknights', name: 'arknights', css: arknights_css, highlight: 'atom-one-light' },
+  'vuepress': { id: 'vuepress', name: 'vuepress', css: vuepress_css, highlight: 'base16/tomorrow-night' },
+  'Chinese-red': { id: 'Chinese-red', name: 'Chinese-red', css: Chinese_red_css, highlight: 'xcode' },
+  'nico': { id: 'nico', name: 'nico', css: nico_css, highlight: 'atelier-sulphurpool-light' },
+  'devui-blue': { id: 'devui-blue', name: 'devui-blue', css: devui_blue_css },
+  'serene-rose': { id: 'serene-rose', name: 'serene-rose', css: serene_rose_css, highlight: 'atom-one-dark' },
+  'z-blue': { id: 'z-blue', name: 'z-blue', css: z_blue_css, highlight: 'androidstudio' },
+  'minimalism': { id: 'minimalism', name: 'minimalism', css: minimalism_css, highlight: 'atom-one-dark' },
+  'koi': { id: 'koi', name: 'koi', css: koi_css, highlight: 'base16/tomorrow-night' },
+  'yu': { id: 'yu', name: 'yu', css: yu_css, highlight: 'atom-one-dark' },
+  'lilsnake': { id: 'lilsnake', name: 'lilsnake', css: lilsnake_css, highlight: 'hybrid' },
+  'keepnice': { id: 'keepnice', name: 'keepnice', css: keepnice_css, highlight: 'github' },
 };
 
 export const themeList: { id: string; name: string }[] = [
-  { id: '3060', name: '重影' },
-  { id: '3050', name: '丘比特忙' },
-  { id: '1377', name: '奇点' },
-  { id: '1348', name: '雁栖湖' },
-  { id: '11773', name: '柠檬黄' },
-  { id: '1', name: '橙心' },
-  { id: '3', name: '姹紫' },
-  { id: '4', name: '嫩青' },
-  { id: '5', name: '绿意' },
-  { id: '6', name: '红绯' },
-  { id: '8', name: '蓝莹' },
-  { id: '10', name: '兰青' },
-  { id: '11', name: '山吹' },
-  { id: '12', name: '前端之巅同款' },
-  { id: '13', name: '极客黑' },
-  { id: '15', name: '蔷薇紫' },
-  { id: '16', name: '萌绿' },
-  { id: '17', name: '全栈蓝' },
-  { id: '18', name: '极简黑' },
-  { id: '19', name: '橙蓝风' },
-  { id: '33', name: 'Pornhub黄' },
-  { id: '35', name: '凝夜紫' },
-  { id: '42', name: '萌粉' },
-  { id: '44', name: 'Obsidian' },
-  { id: '45', name: '灵动蓝' },
-  { id: '48', name: '草原绿' },
-  { id: '51', name: '科技蓝' },
-  { id: '62', name: 'WeFormat' },
-  { id: '63', name: '简' },
-  { id: '1653', name: '锤子便签主题第2版' },
+  { id: 'juejin', name: 'juejin' },
+  { id: 'github', name: 'github' },
+  { id: 'smartblue', name: 'smartblue' },
+  { id: 'cyanosis', name: 'cyanosis' },
+  { id: 'channing-cyan', name: 'channing-cyan' },
+  { id: 'fancy', name: 'fancy' },
+  { id: 'hydrogen', name: 'hydrogen' },
+  { id: 'condensed-night-purple', name: 'condensed-night-purple' },
+  { id: 'greenwillow', name: 'greenwillow' },
+  { id: 'v-green', name: 'v-green' },
+  { id: 'vue-pro', name: 'vue-pro' },
+  { id: 'healer-readable', name: 'healer-readable' },
+  { id: 'mk-cute', name: 'mk-cute' },
+  { id: 'jzman', name: 'jzman' },
+  { id: 'geek-black', name: 'geek-black' },
+  { id: 'awesome-green', name: 'awesome-green' },
+  { id: 'qklhk-chocolate', name: 'qklhk-chocolate' },
+  { id: 'orange', name: 'orange' },
+  { id: 'scrolls-light', name: 'scrolls-light' },
+  { id: 'simplicity-green', name: 'simplicity-green' },
+  { id: 'arknights', name: 'arknights' },
+  { id: 'vuepress', name: 'vuepress' },
+  { id: 'Chinese-red', name: 'Chinese-red' },
+  { id: 'nico', name: 'nico' },
+  { id: 'devui-blue', name: 'devui-blue' },
+  { id: 'serene-rose', name: 'serene-rose' },
+  { id: 'z-blue', name: 'z-blue' },
+  { id: 'minimalism', name: 'minimalism' },
+  { id: 'koi', name: 'koi' },
+  { id: 'yu', name: 'yu' },
+  { id: 'lilsnake', name: 'lilsnake' },
+  { id: 'keepnice', name: 'keepnice' },
 ];

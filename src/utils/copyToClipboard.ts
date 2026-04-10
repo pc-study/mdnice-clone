@@ -27,7 +27,7 @@ function inlineStyles(container: Element): string {
 }
 
 export async function copyAsWechat(previewContainer: Element): Promise<void> {
-  const themeEl = previewContainer.querySelector('#nice');
+  const themeEl = previewContainer.querySelector('.markdown-body');
   if (!themeEl) throw new Error('Preview content not found');
 
   const html = inlineStyles(themeEl);
@@ -49,7 +49,7 @@ export async function copyAsWechat(previewContainer: Element): Promise<void> {
 }
 
 export async function copyAsZhihu(previewContainer: Element): Promise<void> {
-  const themeEl = previewContainer.querySelector('#nice');
+  const themeEl = previewContainer.querySelector('.markdown-body');
   if (!themeEl) throw new Error('Preview content not found');
   const html = themeEl.innerHTML;
   const blob = new Blob([html], { type: 'text/html' });

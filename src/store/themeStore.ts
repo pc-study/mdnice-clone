@@ -8,7 +8,7 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  currentTheme: localStorage.getItem('mdnice-theme') || '1',
+  currentTheme: localStorage.getItem('mdnice-theme') || 'juejin',
   setCurrentTheme: (currentTheme) => {
     localStorage.setItem('mdnice-theme', currentTheme);
     set({ currentTheme });

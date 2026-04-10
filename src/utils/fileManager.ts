@@ -44,7 +44,7 @@ export function exportHTML(html: string, themeCSS: string, title: string) {
   </style>
 </head>
 <body>
-  <div id="nice">${html}</div>
+  <div class="markdown-body">${html}</div>
 </body>
 </html>`;
   downloadBlob(new Blob([fullHtml], { type: 'text/html;charset=utf-8' }), title + '.html');
