@@ -81,4 +81,6 @@
 - 完成阶段七：文件树 CRUD + localStorage 持久化
 - 完成阶段八：富文本复制（微信/知乎/掘金）+ 文件导入导出
 - 完成阶段九：微信外链转脚注 + 文档格式化
-- 进入阶段十：UI 打磨与优化
+- 完成阶段十：UI 打磨、特殊语法、帮助系统、响应式设计
+- 配置 GitHub Actions 自动部署到 GitHub Pages
+- 线上地址：https://pc-study.github.io/mdnice-clone/
