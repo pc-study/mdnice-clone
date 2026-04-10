@@ -14,7 +14,7 @@ import { copyAsWechat, copyAsZhihu, copyAsJuejin } from './utils/copyToClipboard
 import { useSyncScroll } from './hooks/useSyncScroll';
 
 const App: React.FC = () => {
-  const { content, viewMode, setViewMode } = useEditorStore();
+  const { content, viewMode } = useEditorStore();
   const { sidebarVisible, setSidebarVisible, activeFileId, updateFileContent } = useFileStore();
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
