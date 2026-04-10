@@ -150,6 +150,17 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
           margin: 0 !important;
           border-radius: 0 !important;
           box-shadow: none !important;
+          padding: 0 !important;
+        }
+        /* 清除排版主题通过伪元素添加的 Mac 圆点等装饰 */
+        .markdown-body .code-block-wrapper pre::before,
+        .markdown-body .code-block-wrapper pre::after,
+        .markdown-body .code-block-wrapper pre.hljs::before,
+        .markdown-body .code-block-wrapper pre.hljs::after,
+        .markdown-body .code-block-wrapper code::before,
+        .markdown-body .code-block-wrapper code::after {
+          display: none !important;
+          content: none !important;
         }
 
         /* === 顶部 Header 栏 === */
@@ -250,10 +261,10 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
         }
         .markdown-body .code-block-wrapper pre.hljs {
           flex: 1;
-          padding: 14px 16px 14px 0 !important;
+          overflow: visible !important;
         }
         .markdown-body .code-block-wrapper pre.hljs code {
-          padding: 0 !important;
+          padding: 14px 16px 14px 0 !important;
           font-size: 13px;
           line-height: 20px;
           font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -330,10 +341,8 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
           .markdown-body .code-line-numbers span {
             padding-right: 8px;
           }
-          .markdown-body .code-block-wrapper pre.hljs {
-            padding: 10px 10px 10px 0 !important;
-          }
           .markdown-body .code-block-wrapper pre.hljs code {
+            padding: 10px 10px 10px 0 !important;
             font-size: 12px;
             line-height: 18px;
           }
