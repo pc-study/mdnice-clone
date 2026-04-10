@@ -19,6 +19,8 @@ const dropdownCloseCallbacks = new Set<() => void>();
 export const Dropdown: React.FC<DropdownProps> = ({ label, items }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
   const closeThis = useCallback(() => setOpen(false), []);
 
@@ -41,13 +43,19 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, items }) => {
       dropdownCloseCallbacks.forEach((cb) => {
         if (cb !== closeThis) cb();
       });
+      // Calculate position from button rect
+      if (btnRef.current) {
+        const rect = btnRef.current.getBoundingClientRect();
+        setPos({ top: rect.bottom, left: rect.left });
+      }
     }
     setOpen(!open);
   };
 
   return (
-    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+    <div ref={ref} style={{ flexShrink: 0 }}>
       <button
+        ref={btnRef}
         onClick={handleToggle}
         style={{
           background: open ? '#f0f0f0' : 'none', border: 'none', padding: '6px 12px',
@@ -60,10 +68,10 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, items }) => {
       </button>
       {open && (
         <div style={{
-          position: 'absolute', top: '100%', left: 0, minWidth: 200,
+          position: 'fixed', top: pos.top, left: pos.left, minWidth: 200,
           backgroundColor: '#fff', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-          border: '1px solid #e0e0e0', padding: '4px 0', zIndex: 1000,
-          maxHeight: 360, overflowY: 'auto',
+          border: '1px solid #e0e0e0', padding: '4px 0', zIndex: 10000,
+          maxHeight: 'calc(100vh - 60px)', overflowY: 'auto',
         }}>
           {items.map((item, i) => (
             item.divider ? (
