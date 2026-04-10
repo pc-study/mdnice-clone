@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { themes } from '../../themes';
-import { codeThemes } from '../../codeThemes';
+import { fetchCodeThemeCSS } from '../../codeThemes';
 import { renderMarkdown } from '../../utils/markdownParser';
 
 interface MarkdownPreviewProps {
@@ -12,7 +12,7 @@ interface MarkdownPreviewProps {
 
 export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, previewRef: externalRef }) => {
   const content = useEditorStore((s) => s.content);
-  const { currentTheme, currentCodeTheme } = useThemeStore();
+  const { currentTheme, currentCodeTheme, macStyleEnabled } = useThemeStore();
   const internalRef = useRef<HTMLDivElement>(null);
   const ref = externalRef || internalRef;
 
@@ -23,10 +23,18 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
     return () => clearTimeout(timer);
   }, [content]);
 
+  // Fetch code theme CSS from CDN with caching
+  const [codeThemeCSS, setCodeThemeCSS] = useState('');
+  useEffect(() => {
+    let cancelled = false;
+    fetchCodeThemeCSS(currentCodeTheme).then((css) => {
+      if (!cancelled) setCodeThemeCSS(css);
+    });
+    return () => { cancelled = true; };
+  }, [currentCodeTheme]);
+
   const html = useMemo(() => renderMarkdown(debouncedContent), [debouncedContent]);
   const themeCSS = useMemo(() => themes[currentTheme]?.css || '', [currentTheme]);
-  const codeThemeCSS = useMemo(() => codeThemes[currentCodeTheme]?.css || '', [currentCodeTheme]);
-  const isMacCodeTheme = codeThemes[currentCodeTheme]?.isMac || false;
 
   const handleScroll = () => {
     if (onScroll && ref.current) {
@@ -130,7 +138,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ onScroll, prev
         }
       `}</style>
       <div
-        className={`markdown-body${isMacCodeTheme ? ' mac-code-theme' : ''}`}
+        className={`markdown-body${macStyleEnabled ? ' mac-code-theme' : ''}`}
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>

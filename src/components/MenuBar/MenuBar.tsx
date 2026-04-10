@@ -35,7 +35,7 @@ interface MenuBarProps {
 
 export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorViewRef, onShowMarkdownHelp, onShowShortcuts, onShowAbout }) => {
   const { content, setContent, viewMode, setViewMode, fontSize, setFontSize, lineHeight, setLineHeight, wordWrap, setWordWrap } = useEditorStore();
-  const { currentTheme, setCurrentTheme, currentCodeTheme, setCurrentCodeTheme } = useThemeStore();
+  const { currentTheme, setCurrentTheme, currentCodeTheme, setCurrentCodeTheme, macStyleEnabled, setMacStyleEnabled } = useThemeStore();
   const { addFile, setActiveFileId, activeFileId, updateFileContent } = useFileStore();
 
   const toast = (msg: string) => onToast?.(msg);
@@ -110,11 +110,19 @@ export const MenuBar: React.FC<MenuBarProps> = ({ onToast, previewRef, editorVie
     onClick: () => setCurrentTheme(t.id),
   }));
 
-  const codeThemeItems = codeThemeList.map((t) => ({
-    label: t.name,
-    checked: currentCodeTheme === t.id,
-    onClick: () => setCurrentCodeTheme(t.id),
-  }));
+  const codeThemeItems: { label: string; checked?: boolean; onClick?: () => void; divider?: boolean }[] = [
+    {
+      label: macStyleEnabled ? 'Mac 风格: 开启' : 'Mac 风格: 关闭',
+      checked: macStyleEnabled,
+      onClick: () => setMacStyleEnabled(!macStyleEnabled),
+    },
+    { label: '', divider: true },
+    ...codeThemeList.map((t) =>
+      t.divider
+        ? { label: t.name, divider: true }
+        : { label: t.name, checked: currentCodeTheme === t.id, onClick: () => setCurrentCodeTheme(t.id) }
+    ),
+  ];
 
   const functionItems = [
     {

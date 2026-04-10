@@ -1,1364 +1,361 @@
 export interface CodeThemeDefinition {
   id: string;
   name: string;
-  css: string;
   isMac?: boolean;
 }
 
-const atomOneDarkCss = `/*
-
-Atom One Dark by Daniel Gamage
-Original One Dark Syntax theme from https://github.com/atom/one-dark-syntax
-
-base:    #282c34
-mono-1:  #abb2bf
-mono-2:  #818896
-mono-3:  #5c6370
-hue-1:   #56b6c2
-hue-2:   #61aeee
-hue-3:   #c678dd
-hue-4:   #98c379
-hue-5:   #e06c75
-hue-5-2: #be5046
-hue-6:   #d19a66
-hue-6-2: #e6c07b
-
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  color: #abb2bf;
-  background: #282c34;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #5c6370;
-  font-style: italic;
-}
-
-.hljs-doctag,
-.hljs-keyword,
-.hljs-formula {
-  color: #c678dd;
-}
-
-.hljs-section,
-.hljs-name,
-.hljs-selector-tag,
-.hljs-deletion,
-.hljs-subst {
-  color: #e06c75;
-}
-
-.hljs-literal {
-  color: #56b6c2;
-}
-
-.hljs-string,
-.hljs-regexp,
-.hljs-addition,
-.hljs-attribute,
-.hljs-meta-string {
-  color: #98c379;
-}
-
-.hljs-built_in,
-.hljs-class .hljs-title {
-  color: #e6c07b;
-}
-
-.hljs-attr,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-type,
-.hljs-selector-class,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-number {
-  color: #d19a66;
-}
-
-.hljs-symbol,
-.hljs-bullet,
-.hljs-link,
-.hljs-meta,
-.hljs-selector-id,
-.hljs-title {
-  color: #61aeee;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}
-
-.hljs-link {
-  text-decoration: underline;
-}`;
-
-const atomOneLightCss = `/*
-
-Atom One Light by Daniel Gamage
-Original One Light Syntax theme from https://github.com/atom/one-light-syntax
-
-base:    #fafafa
-mono-1:  #383a42
-mono-2:  #686b77
-mono-3:  #a0a1a7
-hue-1:   #0184bb
-hue-2:   #4078f2
-hue-3:   #a626a4
-hue-4:   #50a14f
-hue-5:   #e45649
-hue-5-2: #c91243
-hue-6:   #986801
-hue-6-2: #c18401
-
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  color: #383a42;
-  background: #fafafa;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #a0a1a7;
-  font-style: italic;
-}
-
-.hljs-doctag,
-.hljs-keyword,
-.hljs-formula {
-  color: #a626a4;
-}
-
-.hljs-section,
-.hljs-name,
-.hljs-selector-tag,
-.hljs-deletion,
-.hljs-subst {
-  color: #e45649;
-}
-
-.hljs-literal {
-  color: #0184bb;
-}
-
-.hljs-string,
-.hljs-regexp,
-.hljs-addition,
-.hljs-attribute,
-.hljs-meta-string {
-  color: #50a14f;
-}
-
-.hljs-built_in,
-.hljs-class .hljs-title {
-  color: #c18401;
-}
-
-.hljs-attr,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-type,
-.hljs-selector-class,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-number {
-  color: #986801;
-}
-
-.hljs-symbol,
-.hljs-bullet,
-.hljs-link,
-.hljs-meta,
-.hljs-selector-id,
-.hljs-title {
-  color: #4078f2;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}
-
-.hljs-link {
-  text-decoration: underline;
-}`;
-
-const githubCss = `/*
-
-github.com style (c) Vasily Polovnyov <vast@whiteants.net>
-
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  color: #333;
-  background: #f8f8f8;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #998;
-  font-style: italic;
-}
-
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-subst {
-  color: #333;
-  font-weight: bold;
-}
-
-.hljs-number,
-.hljs-literal,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-tag .hljs-attr {
-  color: #008080;
-}
-
-.hljs-string,
-.hljs-doctag {
-  color: #d14;
-}
-
-.hljs-title,
-.hljs-section,
-.hljs-selector-id {
-  color: #900;
-  font-weight: bold;
-}
-
-.hljs-subst {
-  font-weight: normal;
-}
-
-.hljs-type,
-.hljs-class .hljs-title {
-  color: #458;
-  font-weight: bold;
-}
-
-.hljs-tag,
-.hljs-name,
-.hljs-attribute {
-  color: #000080;
-  font-weight: normal;
-}
-
-.hljs-regexp,
-.hljs-link {
-  color: #009926;
-}
-
-.hljs-symbol,
-.hljs-bullet {
-  color: #990073;
-}
-
-.hljs-built_in,
-.hljs-builtin-name {
-  color: #0086b3;
-}
-
-.hljs-meta {
-  color: #999;
-  font-weight: bold;
-}
-
-.hljs-deletion {
-  background: #fdd;
-}
-
-.hljs-addition {
-  background: #dfd;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}`;
-
-const monokaiCss = `/*
-Monokai style - ported by Luigi Maselli - http://grigio.org
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  background: #272822; color: #ddd;
-}
-
-.hljs-tag,
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-literal,
-.hljs-strong,
-.hljs-name {
-  color: #f92672;
-}
-
-.hljs-code {
-  color: #66d9ef;
-}
-
-.hljs-class .hljs-title {
-  color: white;
-}
-
-.hljs-attribute,
-.hljs-symbol,
-.hljs-regexp,
-.hljs-link {
-  color: #bf79db;
-}
-
-.hljs-string,
-.hljs-bullet,
-.hljs-subst,
-.hljs-title,
-.hljs-section,
-.hljs-emphasis,
-.hljs-type,
-.hljs-built_in,
-.hljs-builtin-name,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-addition,
-.hljs-variable,
-.hljs-template-tag,
-.hljs-template-variable {
-  color: #a6e22e;
-}
-
-.hljs-comment,
-.hljs-quote,
-.hljs-deletion,
-.hljs-meta {
-  color: #75715e;
-}
-
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-literal,
-.hljs-doctag,
-.hljs-title,
-.hljs-section,
-.hljs-type,
-.hljs-selector-id {
-  font-weight: bold;
-}`;
-
-const vs2015Css = `/*
- * Visual Studio 2015 dark style
- * Author: Nicolas LLOBERA <nllobera@gmail.com>
- */
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  background: #1E1E1E;
-  color: #DCDCDC;
-}
-
-.hljs-keyword,
-.hljs-literal,
-.hljs-symbol,
-.hljs-name {
-  color: #569CD6;
-}
-.hljs-link {
-  color: #569CD6;
-  text-decoration: underline;
-}
-
-.hljs-built_in,
-.hljs-type {
-  color: #4EC9B0;
-}
-
-.hljs-number,
-.hljs-class {
-  color: #B8D7A3;
-}
-
-.hljs-string,
-.hljs-meta-string {
-  color: #D69D85;
-}
-
-.hljs-regexp,
-.hljs-template-tag {
-  color: #9A5334;
-}
-
-.hljs-subst,
-.hljs-function,
-.hljs-title,
-.hljs-params,
-.hljs-formula {
-  color: #DCDCDC;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #57A64A;
-  font-style: italic;
-}
-
-.hljs-doctag {
-  color: #608B4E;
-}
-
-.hljs-meta,
-.hljs-meta-keyword,
-.hljs-tag {
-  color: #9B9B9B;
-}
-
-.hljs-variable,
-.hljs-template-variable {
-  color: #BD63C5;
-}
-
-.hljs-attr,
-.hljs-attribute,
-.hljs-builtin-name {
-  color: #9CDCFE;
-}
-
-.hljs-section {
-  color: gold;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}
-
-/*.hljs-code {
-  font-family:'Monospace';
-}*/
-
-.hljs-bullet,
-.hljs-selector-tag,
-.hljs-selector-id,
-.hljs-selector-class,
-.hljs-selector-attr,
-.hljs-selector-pseudo {
-  color: #D7BA7D;
-}
-
-.hljs-addition {
-  background-color: #144212;
-  display: inline-block;
-  width: 100%;
-}
-
-.hljs-deletion {
-  background-color: #600;
-  display: inline-block;
-  width: 100%;
-}`;
-
-const xcodeCss = `/*
-
-XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
-
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  background: #fff;
-  color: black;
-}
-
-/* Gray DOCTYPE selectors like WebKit */
-.xml .hljs-meta {
-  color: #c0c0c0;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #007400;
-}
-
-.hljs-tag,
-.hljs-attribute,
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-literal,
-.hljs-name {
-  color: #aa0d91;
-}
-
-.hljs-variable,
-.hljs-template-variable {
-  color: #3F6E74;
-}
-
-.hljs-code,
-.hljs-string,
-.hljs-meta-string {
-  color: #c41a16;
-}
-
-.hljs-regexp,
-.hljs-link {
-  color: #0E0EFF;
-}
-
-.hljs-title,
-.hljs-symbol,
-.hljs-bullet,
-.hljs-number {
-  color: #1c00cf;
-}
-
-.hljs-section,
-.hljs-meta {
-  color: #643820;
-}
-
-
-.hljs-class .hljs-title,
-.hljs-type,
-.hljs-built_in,
-.hljs-builtin-name,
-.hljs-params {
-  color: #5c2699;
-}
-
-.hljs-attr {
-  color: #836C28;
-}
-
-.hljs-subst {
-  color: #000;
-}
-
-.hljs-formula {
-  background-color: #eee;
-  font-style: italic;
-}
-
-.hljs-addition {
-  background-color: #baeeba;
-}
-
-.hljs-deletion {
-  background-color: #ffc8bd;
-}
-
-.hljs-selector-id,
-.hljs-selector-class {
-  color: #9b703f;
-}
-
-.hljs-doctag,
-.hljs-strong {
-  font-weight: bold;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}`;
-
-const macAtomOneDarkCss = `/*
-
-Atom One Dark by Daniel Gamage
-Original One Dark Syntax theme from https://github.com/atom/one-dark-syntax
-
-base:    #282c34
-mono-1:  #abb2bf
-mono-2:  #818896
-mono-3:  #5c6370
-hue-1:   #56b6c2
-hue-2:   #61aeee
-hue-3:   #c678dd
-hue-4:   #98c379
-hue-5:   #e06c75
-hue-5-2: #be5046
-hue-6:   #d19a66
-hue-6-2: #e6c07b
-
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  color: #abb2bf;
-  background: #282c34;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #5c6370;
-  font-style: italic;
-}
-
-.hljs-doctag,
-.hljs-keyword,
-.hljs-formula {
-  color: #c678dd;
-}
-
-.hljs-section,
-.hljs-name,
-.hljs-selector-tag,
-.hljs-deletion,
-.hljs-subst {
-  color: #e06c75;
-}
-
-.hljs-literal {
-  color: #56b6c2;
-}
-
-.hljs-string,
-.hljs-regexp,
-.hljs-addition,
-.hljs-attribute,
-.hljs-meta-string {
-  color: #98c379;
-}
-
-.hljs-built_in,
-.hljs-class .hljs-title {
-  color: #e6c07b;
-}
-
-.hljs-attr,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-type,
-.hljs-selector-class,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-number {
-  color: #d19a66;
-}
-
-.hljs-symbol,
-.hljs-bullet,
-.hljs-link,
-.hljs-meta,
-.hljs-selector-id,
-.hljs-title {
-  color: #61aeee;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}
-
-.hljs-link {
-  text-decoration: underline;
-}
-
-#nice .custom code {
-  padding-top: 15px;
-  background: #282c34;
-  border-radius: 5px;
-}
-
-#nice .custom:before {
-  content: '';
-  display:block;
-  background: url(https://files.mdnice.com/user/3441/876cad08-0422-409d-bb5a-08afec5da8ee.svg);
-  height: 30px;
-  width: 100%;
-  background-size:40px;
-  background-repeat: no-repeat;
-  background-color: #282c34;
-  margin-bottom: -7px;
-  border-radius: 5px;
-  background-position: 10px 10px;
-}
-
-#nice .custom {
-  border-radius: 5px;
-  box-shadow: rgba(0, 0, 0, 0.55) 0px 2px 10px;
-  text-align: left;
-}`;
-
-const macAtomOneLightCss = `/*
-
-Atom One Light by Daniel Gamage
-Original One Light Syntax theme from https://github.com/atom/one-light-syntax
-
-base:    #fafafa
-mono-1:  #383a42
-mono-2:  #686b77
-mono-3:  #a0a1a7
-hue-1:   #0184bb
-hue-2:   #4078f2
-hue-3:   #a626a4
-hue-4:   #50a14f
-hue-5:   #e45649
-hue-5-2: #c91243
-hue-6:   #986801
-hue-6-2: #c18401
-
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  color: #383a42;
-  background: #fafafa;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #a0a1a7;
-  font-style: italic;
-}
-
-.hljs-doctag,
-.hljs-keyword,
-.hljs-formula {
-  color: #a626a4;
-}
-
-.hljs-section,
-.hljs-name,
-.hljs-selector-tag,
-.hljs-deletion,
-.hljs-subst {
-  color: #e45649;
-}
-
-.hljs-literal {
-  color: #0184bb;
-}
-
-.hljs-string,
-.hljs-regexp,
-.hljs-addition,
-.hljs-attribute,
-.hljs-meta-string {
-  color: #50a14f;
-}
-
-.hljs-built_in,
-.hljs-class .hljs-title {
-  color: #c18401;
-}
-
-.hljs-attr,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-type,
-.hljs-selector-class,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-number {
-  color: #986801;
-}
-
-.hljs-symbol,
-.hljs-bullet,
-.hljs-link,
-.hljs-meta,
-.hljs-selector-id,
-.hljs-title {
-  color: #4078f2;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}
-
-.hljs-link {
-  text-decoration: underline;
-}
-
-#nice .custom code {
-  padding-top: 15px;
-  background: #fafafa;
-  border-radius: 5px;
-}
-
-#nice .custom:before {
-  content: '';
-  display:block;
-  background: url(https://files.mdnice.com/user/3441/876cad08-0422-409d-bb5a-08afec5da8ee.svg);
-  height: 30px;
-  width: 100%;
-  background-size:40px;
-  background-repeat: no-repeat;
-  background-color: #fafafa;
-  margin-bottom: -7px;
-  border-radius: 5px;
-  background-position: 10px 10px;
-}
-
-#nice .custom {
-  border-radius: 5px;
-  box-shadow: rgba(0, 0, 0, 0.55) 0px 2px 10px;
-  text-align: left;
-}`;
-
-const macGithubCss = `/*
-
-github.com style (c) Vasily Polovnyov <vast@whiteants.net>
-
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  color: #333;
-  background: #f8f8f8;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #998;
-  font-style: italic;
-}
-
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-subst {
-  color: #333;
-  font-weight: bold;
-}
-
-.hljs-number,
-.hljs-literal,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-tag .hljs-attr {
-  color: #008080;
-}
-
-.hljs-string,
-.hljs-doctag {
-  color: #d14;
-}
-
-.hljs-title,
-.hljs-section,
-.hljs-selector-id {
-  color: #900;
-  font-weight: bold;
-}
-
-.hljs-subst {
-  font-weight: normal;
-}
-
-.hljs-type,
-.hljs-class .hljs-title {
-  color: #458;
-  font-weight: bold;
-}
-
-.hljs-tag,
-.hljs-name,
-.hljs-attribute {
-  color: #000080;
-  font-weight: normal;
-}
-
-.hljs-regexp,
-.hljs-link {
-  color: #009926;
-}
-
-.hljs-symbol,
-.hljs-bullet {
-  color: #990073;
-}
-
-.hljs-built_in,
-.hljs-builtin-name {
-  color: #0086b3;
-}
-
-.hljs-meta {
-  color: #999;
-  font-weight: bold;
-}
-
-.hljs-deletion {
-  background: #fdd;
-}
-
-.hljs-addition {
-  background: #dfd;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}
-
-#nice .custom code {
-  padding-top: 15px;
-  background: #f8f8f8;
-  border-radius: 5px;
-}
-
-#nice .custom:before {
-  content: '';
-  display:block;
-  background: url(https://files.mdnice.com/user/3441/876cad08-0422-409d-bb5a-08afec5da8ee.svg);
-  height: 30px;
-  width: 100%;
-  background-size:40px;
-  background-repeat: no-repeat;
-  background-color: #f8f8f8;
-  margin-bottom: -7px;
-  border-radius: 5px;
-  background-position: 10px 10px;
-}
-
-#nice .custom {
-  border-radius: 5px;
-  box-shadow: rgba(0, 0, 0, 0.55) 0px 2px 10px;
-  text-align: left;
-}`;
-
-const macMonokaiCss = `/*
-Monokai style - ported by Luigi Maselli - http://grigio.org
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  background: #272822; color: #ddd;
-}
-
-.hljs-tag,
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-literal,
-.hljs-strong,
-.hljs-name {
-  color: #f92672;
-}
-
-.hljs-code {
-  color: #66d9ef;
-}
-
-.hljs-class .hljs-title {
-  color: white;
-}
-
-.hljs-attribute,
-.hljs-symbol,
-.hljs-regexp,
-.hljs-link {
-  color: #bf79db;
-}
-
-.hljs-string,
-.hljs-bullet,
-.hljs-subst,
-.hljs-title,
-.hljs-section,
-.hljs-emphasis,
-.hljs-type,
-.hljs-built_in,
-.hljs-builtin-name,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-addition,
-.hljs-variable,
-.hljs-template-tag,
-.hljs-template-variable {
-  color: #a6e22e;
-}
-
-.hljs-comment,
-.hljs-quote,
-.hljs-deletion,
-.hljs-meta {
-  color: #75715e;
-}
-
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-literal,
-.hljs-doctag,
-.hljs-title,
-.hljs-section,
-.hljs-type,
-.hljs-selector-id {
-  font-weight: bold;
-}
-
-#nice .custom code {
-  padding-top: 15px;
-  background: #272822;
-  border-radius: 5px;
-}
-
-#nice .custom:before {
-  content: '';
-  display:block;
-  background: url(https://files.mdnice.com/user/3441/876cad08-0422-409d-bb5a-08afec5da8ee.svg);
-  height: 30px;
-  width: 100%;
-  background-size:40px;
-  background-repeat: no-repeat;
-  background-color: #272822;
-  margin-bottom: -7px;
-  border-radius: 5px;
-  background-position: 10px 10px;
-}
-
-#nice .custom {
-  border-radius: 5px;
-  box-shadow: rgba(0, 0, 0, 0.55) 0px 2px 10px;
-  text-align: left;
-}`;
-
-const macVs2015Css = `/*
- * Visual Studio 2015 dark style
- * Author: Nicolas LLOBERA <nllobera@gmail.com>
- */
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  background: #1E1E1E;
-  color: #DCDCDC;
-}
-
-.hljs-keyword,
-.hljs-literal,
-.hljs-symbol,
-.hljs-name {
-  color: #569CD6;
-}
-.hljs-link {
-  color: #569CD6;
-  text-decoration: underline;
-}
-
-.hljs-built_in,
-.hljs-type {
-  color: #4EC9B0;
-}
-
-.hljs-number,
-.hljs-class {
-  color: #B8D7A3;
-}
-
-.hljs-string,
-.hljs-meta-string {
-  color: #D69D85;
-}
-
-.hljs-regexp,
-.hljs-template-tag {
-  color: #9A5334;
-}
-
-.hljs-subst,
-.hljs-function,
-.hljs-title,
-.hljs-params,
-.hljs-formula {
-  color: #DCDCDC;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #57A64A;
-  font-style: italic;
-}
-
-.hljs-doctag {
-  color: #608B4E;
-}
-
-.hljs-meta,
-.hljs-meta-keyword,
-.hljs-tag {
-  color: #9B9B9B;
-}
-
-.hljs-variable,
-.hljs-template-variable {
-  color: #BD63C5;
-}
-
-.hljs-attr,
-.hljs-attribute,
-.hljs-builtin-name {
-  color: #9CDCFE;
-}
-
-.hljs-section {
-  color: gold;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}
-
-/*.hljs-code {
-  font-family:'Monospace';
-}*/
-
-.hljs-bullet,
-.hljs-selector-tag,
-.hljs-selector-id,
-.hljs-selector-class,
-.hljs-selector-attr,
-.hljs-selector-pseudo {
-  color: #D7BA7D;
-}
-
-.hljs-addition {
-  background-color: #144212;
-  display: inline-block;
-  width: 100%;
-}
-
-.hljs-deletion {
-  background-color: #600;
-  display: inline-block;
-  width: 100%;
-}
-
-#nice .custom code {
-  padding-top: 15px;
-  background: #1E1E1E;
-  border-radius: 5px;
-}
-
-#nice .custom:before {
-  content: '';
-  display:block;
-  background: url(https://files.mdnice.com/user/3441/876cad08-0422-409d-bb5a-08afec5da8ee.svg);
-  height: 30px;
-  width: 100%;
-  background-size:40px;
-  background-repeat: no-repeat;
-  background-color: #1E1E1E;
-  margin-bottom: -7px;
-  border-radius: 5px;
-  background-position: 10px 10px;
-}
-
-#nice .custom {
-  border-radius: 5px;
-  box-shadow: rgba(0, 0, 0, 0.55) 0px 2px 10px;
-  text-align: left;
-}`;
-
-const macXcodeCss = `/*
-
-XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
-
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 16px;
-  background: #fff;
-  color: black;
-}
-
-/* Gray DOCTYPE selectors like WebKit */
-.xml .hljs-meta {
-  color: #c0c0c0;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #007400;
-}
-
-.hljs-tag,
-.hljs-attribute,
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-literal,
-.hljs-name {
-  color: #aa0d91;
-}
-
-.hljs-variable,
-.hljs-template-variable {
-  color: #3F6E74;
-}
-
-.hljs-code,
-.hljs-string,
-.hljs-meta-string {
-  color: #c41a16;
-}
-
-.hljs-regexp,
-.hljs-link {
-  color: #0E0EFF;
-}
-
-.hljs-title,
-.hljs-symbol,
-.hljs-bullet,
-.hljs-number {
-  color: #1c00cf;
-}
-
-.hljs-section,
-.hljs-meta {
-  color: #643820;
-}
-
-
-.hljs-class .hljs-title,
-.hljs-type,
-.hljs-built_in,
-.hljs-builtin-name,
-.hljs-params {
-  color: #5c2699;
-}
-
-.hljs-attr {
-  color: #836C28;
-}
-
-.hljs-subst {
-  color: #000;
-}
-
-.hljs-formula {
-  background-color: #eee;
-  font-style: italic;
-}
-
-.hljs-addition {
-  background-color: #baeeba;
-}
-
-.hljs-deletion {
-  background-color: #ffc8bd;
-}
-
-.hljs-selector-id,
-.hljs-selector-class {
-  color: #9b703f;
-}
-
-.hljs-doctag,
-.hljs-strong {
-  font-weight: bold;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-#nice .custom code {
-  padding-top: 15px;
-  background: #fff;
-  border-radius: 5px;
-}
-
-#nice .custom:before {
-  content: '';
-  display:block;
-  background: url(https://files.mdnice.com/user/3441/876cad08-0422-409d-bb5a-08afec5da8ee.svg);
-  height: 30px;
-  width: 100%;
-  background-size:40px;
-  background-repeat: no-repeat;
-  background-color: #fff;
-  margin-bottom: -7px;
-  border-radius: 5px;
-  background-position: 10px 10px;
-}
-
-#nice .custom {
-  border-radius: 5px;
-  box-shadow: rgba(0, 0, 0, 0.55) 0px 2px 10px;
-  text-align: left;
-}`;
-
-export const codeThemes: Record<string, CodeThemeDefinition> = {
-  'atomOneDark': { id: 'atomOneDark', name: 'Atom One Dark', css: atomOneDarkCss },
-  'atomOneLight': { id: 'atomOneLight', name: 'Atom One Light', css: atomOneLightCss },
-  'github': { id: 'github', name: 'GitHub', css: githubCss },
-  'monokai': { id: 'monokai', name: 'Monokai', css: monokaiCss },
-  'vs2015': { id: 'vs2015', name: 'VS 2015', css: vs2015Css },
-  'xcode': { id: 'xcode', name: 'Xcode', css: xcodeCss },
-  'macAtomOneDark': { id: 'macAtomOneDark', name: 'Mac Atom One Dark', css: macAtomOneDarkCss, isMac: true },
-  'macAtomOneLight': { id: 'macAtomOneLight', name: 'Mac Atom One Light', css: macAtomOneLightCss, isMac: true },
-  'macGithub': { id: 'macGithub', name: 'Mac GitHub', css: macGithubCss, isMac: true },
-  'macMonokai': { id: 'macMonokai', name: 'Mac Monokai', css: macMonokaiCss, isMac: true },
-  'macVs2015': { id: 'macVs2015', name: 'Mac VS 2015', css: macVs2015Css, isMac: true },
-  'macXcode': { id: 'macXcode', name: 'Mac Xcode', css: macXcodeCss, isMac: true },
-};
-
-export const codeThemeList: { id: string; name: string }[] = [
-  { id: 'atomOneDark', name: 'Atom One Dark' },
-  { id: 'atomOneLight', name: 'Atom One Light' },
+// CDN base URL
+export const HLJS_CDN_BASE = 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles';
+
+// Function to get CDN URL for a theme
+export function getCodeThemeCdnUrl(themeId: string): string {
+  return `${HLJS_CDN_BASE}/${themeId}.min.css`;
+}
+
+// CSS cache for fetched themes
+const cssCache: Record<string, string> = {};
+
+// Fetch and cache code theme CSS from CDN
+export async function fetchCodeThemeCSS(themeId: string): Promise<string> {
+  if (cssCache[themeId]) return cssCache[themeId];
+  try {
+    const url = getCodeThemeCdnUrl(themeId);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch theme: ${response.status}`);
+    const css = await response.text();
+    cssCache[themeId] = css;
+    return css;
+  } catch {
+    return '';
+  }
+}
+
+// Popular themes shown first
+export const popularCodeThemes: CodeThemeDefinition[] = [
+  { id: 'atom-one-dark', name: 'Atom One Dark' },
+  { id: 'atom-one-light', name: 'Atom One Light' },
   { id: 'github', name: 'GitHub' },
+  { id: 'github-dark', name: 'GitHub Dark' },
   { id: 'monokai', name: 'Monokai' },
+  { id: 'monokai-sublime', name: 'Monokai Sublime' },
+  { id: 'vs2015', name: 'VS 2015' },
+  { id: 'vs', name: 'VS' },
+  { id: 'xcode', name: 'Xcode' },
+  { id: 'dracula', name: 'Dracula' },
+  { id: 'nord', name: 'Nord' },
+  { id: 'srcery', name: 'Srcery' },
+  { id: 'androidstudio', name: 'Android Studio' },
+  { id: 'hybrid', name: 'Hybrid' },
+  { id: 'a11y-dark', name: 'A11y Dark' },
+  { id: 'a11y-light', name: 'A11y Light' },
+  { id: 'night-owl', name: 'Night Owl' },
+  { id: 'shades-of-purple', name: 'Shades of Purple' },
+  { id: 'tokyo-night-dark', name: 'Tokyo Night Dark' },
+  { id: 'tokyo-night-light', name: 'Tokyo Night Light' },
+  { id: 'stackoverflow-dark', name: 'StackOverflow Dark' },
+  { id: 'stackoverflow-light', name: 'StackOverflow Light' },
+];
+
+// All standard themes (non-base16), alphabetical
+export const standardCodeThemes: CodeThemeDefinition[] = [
+  { id: '1c-light', name: '1C Light' },
+  { id: 'a11y-dark', name: 'A11y Dark' },
+  { id: 'a11y-light', name: 'A11y Light' },
+  { id: 'agate', name: 'Agate' },
+  { id: 'an-old-hope', name: 'An Old Hope' },
+  { id: 'androidstudio', name: 'Android Studio' },
+  { id: 'arduino-light', name: 'Arduino Light' },
+  { id: 'arta', name: 'Arta' },
+  { id: 'ascetic', name: 'Ascetic' },
+  { id: 'atom-one-dark', name: 'Atom One Dark' },
+  { id: 'atom-one-dark-reasonable', name: 'Atom One Dark Reasonable' },
+  { id: 'atom-one-light', name: 'Atom One Light' },
+  { id: 'brown-paper', name: 'Brown Paper' },
+  { id: 'codepen-embed', name: 'CodePen Embed' },
+  { id: 'color-brewer', name: 'Color Brewer' },
+  { id: 'cybertopia-cherry', name: 'Cybertopia Cherry' },
+  { id: 'cybertopia-dimmer', name: 'Cybertopia Dimmer' },
+  { id: 'cybertopia-icecap', name: 'Cybertopia Icecap' },
+  { id: 'cybertopia-saturated', name: 'Cybertopia Saturated' },
+  { id: 'dark', name: 'Dark' },
+  { id: 'default', name: 'Default' },
+  { id: 'devibeans', name: 'Devibeans' },
+  { id: 'docco', name: 'Docco' },
+  { id: 'far', name: 'Far' },
+  { id: 'felipec', name: 'Felipec' },
+  { id: 'foundation', name: 'Foundation' },
+  { id: 'github', name: 'GitHub' },
+  { id: 'github-dark', name: 'GitHub Dark' },
+  { id: 'github-dark-dimmed', name: 'GitHub Dark Dimmed' },
+  { id: 'gml', name: 'GML' },
+  { id: 'googlecode', name: 'Google Code' },
+  { id: 'gradient-dark', name: 'Gradient Dark' },
+  { id: 'gradient-light', name: 'Gradient Light' },
+  { id: 'grayscale', name: 'Grayscale' },
+  { id: 'hybrid', name: 'Hybrid' },
+  { id: 'idea', name: 'IDEA' },
+  { id: 'intellij-light', name: 'IntelliJ Light' },
+  { id: 'ir-black', name: 'IR Black' },
+  { id: 'isbl-editor-dark', name: 'ISBL Editor Dark' },
+  { id: 'isbl-editor-light', name: 'ISBL Editor Light' },
+  { id: 'kimbie-dark', name: 'Kimbie Dark' },
+  { id: 'kimbie-light', name: 'Kimbie Light' },
+  { id: 'lightfair', name: 'Lightfair' },
+  { id: 'lioshi', name: 'Lioshi' },
+  { id: 'magula', name: 'Magula' },
+  { id: 'mono-blue', name: 'Mono Blue' },
+  { id: 'monokai', name: 'Monokai' },
+  { id: 'monokai-sublime', name: 'Monokai Sublime' },
+  { id: 'night-owl', name: 'Night Owl' },
+  { id: 'nnfx-dark', name: 'NNFX Dark' },
+  { id: 'nnfx-light', name: 'NNFX Light' },
+  { id: 'nord', name: 'Nord' },
+  { id: 'obsidian', name: 'Obsidian' },
+  { id: 'panda-syntax-dark', name: 'Panda Syntax Dark' },
+  { id: 'panda-syntax-light', name: 'Panda Syntax Light' },
+  { id: 'paraiso-dark', name: 'Paraiso Dark' },
+  { id: 'paraiso-light', name: 'Paraiso Light' },
+  { id: 'pojoaque', name: 'Pojoaque' },
+  { id: 'purebasic', name: 'PureBasic' },
+  { id: 'qtcreator-dark', name: 'Qt Creator Dark' },
+  { id: 'qtcreator-light', name: 'Qt Creator Light' },
+  { id: 'rainbow', name: 'Rainbow' },
+  { id: 'rose-pine', name: 'Rose Pine' },
+  { id: 'rose-pine-dawn', name: 'Rose Pine Dawn' },
+  { id: 'rose-pine-moon', name: 'Rose Pine Moon' },
+  { id: 'routeros', name: 'RouterOS' },
+  { id: 'school-book', name: 'School Book' },
+  { id: 'shades-of-purple', name: 'Shades of Purple' },
+  { id: 'srcery', name: 'Srcery' },
+  { id: 'stackoverflow-dark', name: 'StackOverflow Dark' },
+  { id: 'stackoverflow-light', name: 'StackOverflow Light' },
+  { id: 'sunburst', name: 'Sunburst' },
+  { id: 'tokyo-night-dark', name: 'Tokyo Night Dark' },
+  { id: 'tokyo-night-light', name: 'Tokyo Night Light' },
+  { id: 'tomorrow-night-blue', name: 'Tomorrow Night Blue' },
+  { id: 'tomorrow-night-bright', name: 'Tomorrow Night Bright' },
+  { id: 'vs', name: 'VS' },
   { id: 'vs2015', name: 'VS 2015' },
   { id: 'xcode', name: 'Xcode' },
-  { id: 'macAtomOneDark', name: 'Mac Atom One Dark' },
-  { id: 'macAtomOneLight', name: 'Mac Atom One Light' },
-  { id: 'macGithub', name: 'Mac GitHub' },
-  { id: 'macMonokai', name: 'Mac Monokai' },
-  { id: 'macVs2015', name: 'Mac VS 2015' },
-  { id: 'macXcode', name: 'Mac Xcode' },
+  { id: 'xt256', name: 'XT256' },
 ];
+
+// base16 themes
+export const base16CodeThemes: CodeThemeDefinition[] = [
+  { id: 'base16/3024', name: '3024' },
+  { id: 'base16/apathy', name: 'Apathy' },
+  { id: 'base16/apprentice', name: 'Apprentice' },
+  { id: 'base16/ashes', name: 'Ashes' },
+  { id: 'base16/atelier-cave', name: 'Atelier Cave' },
+  { id: 'base16/atelier-cave-light', name: 'Atelier Cave Light' },
+  { id: 'base16/atelier-dune', name: 'Atelier Dune' },
+  { id: 'base16/atelier-dune-light', name: 'Atelier Dune Light' },
+  { id: 'base16/atelier-estuary', name: 'Atelier Estuary' },
+  { id: 'base16/atelier-estuary-light', name: 'Atelier Estuary Light' },
+  { id: 'base16/atelier-forest', name: 'Atelier Forest' },
+  { id: 'base16/atelier-forest-light', name: 'Atelier Forest Light' },
+  { id: 'base16/atelier-heath', name: 'Atelier Heath' },
+  { id: 'base16/atelier-heath-light', name: 'Atelier Heath Light' },
+  { id: 'base16/atelier-lakeside', name: 'Atelier Lakeside' },
+  { id: 'base16/atelier-lakeside-light', name: 'Atelier Lakeside Light' },
+  { id: 'base16/atelier-plateau', name: 'Atelier Plateau' },
+  { id: 'base16/atelier-plateau-light', name: 'Atelier Plateau Light' },
+  { id: 'base16/atelier-savanna', name: 'Atelier Savanna' },
+  { id: 'base16/atelier-savanna-light', name: 'Atelier Savanna Light' },
+  { id: 'base16/atelier-seaside', name: 'Atelier Seaside' },
+  { id: 'base16/atelier-seaside-light', name: 'Atelier Seaside Light' },
+  { id: 'base16/atelier-sulphurpool', name: 'Atelier Sulphurpool' },
+  { id: 'base16/atelier-sulphurpool-light', name: 'Atelier Sulphurpool Light' },
+  { id: 'base16/atlas', name: 'Atlas' },
+  { id: 'base16/bespin', name: 'Bespin' },
+  { id: 'base16/black-metal', name: 'Black Metal' },
+  { id: 'base16/black-metal-bathory', name: 'Black Metal Bathory' },
+  { id: 'base16/black-metal-burzum', name: 'Black Metal Burzum' },
+  { id: 'base16/black-metal-dark-funeral', name: 'Black Metal Dark Funeral' },
+  { id: 'base16/black-metal-gorgoroth', name: 'Black Metal Gorgoroth' },
+  { id: 'base16/black-metal-immortal', name: 'Black Metal Immortal' },
+  { id: 'base16/black-metal-khold', name: 'Black Metal Khold' },
+  { id: 'base16/black-metal-marduk', name: 'Black Metal Marduk' },
+  { id: 'base16/black-metal-mayhem', name: 'Black Metal Mayhem' },
+  { id: 'base16/black-metal-nile', name: 'Black Metal Nile' },
+  { id: 'base16/black-metal-venom', name: 'Black Metal Venom' },
+  { id: 'base16/brewer', name: 'Brewer' },
+  { id: 'base16/bright', name: 'Bright' },
+  { id: 'base16/brogrammer', name: 'Brogrammer' },
+  { id: 'base16/brush-trees', name: 'Brush Trees' },
+  { id: 'base16/brush-trees-dark', name: 'Brush Trees Dark' },
+  { id: 'base16/chalk', name: 'Chalk' },
+  { id: 'base16/circus', name: 'Circus' },
+  { id: 'base16/classic-dark', name: 'Classic Dark' },
+  { id: 'base16/classic-light', name: 'Classic Light' },
+  { id: 'base16/codeschool', name: 'Codeschool' },
+  { id: 'base16/colors', name: 'Colors' },
+  { id: 'base16/cupcake', name: 'Cupcake' },
+  { id: 'base16/cupertino', name: 'Cupertino' },
+  { id: 'base16/danqing', name: 'Danqing' },
+  { id: 'base16/darcula', name: 'Darcula' },
+  { id: 'base16/dark-violet', name: 'Dark Violet' },
+  { id: 'base16/darkmoss', name: 'Darkmoss' },
+  { id: 'base16/darktooth', name: 'Darktooth' },
+  { id: 'base16/decaf', name: 'Decaf' },
+  { id: 'base16/default-dark', name: 'Default Dark' },
+  { id: 'base16/default-light', name: 'Default Light' },
+  { id: 'base16/dirtysea', name: 'Dirtysea' },
+  { id: 'base16/dracula', name: 'Dracula' },
+  { id: 'base16/edge-dark', name: 'Edge Dark' },
+  { id: 'base16/edge-light', name: 'Edge Light' },
+  { id: 'base16/eighties', name: 'Eighties' },
+  { id: 'base16/embers', name: 'Embers' },
+  { id: 'base16/equilibrium-dark', name: 'Equilibrium Dark' },
+  { id: 'base16/equilibrium-gray-dark', name: 'Equilibrium Gray Dark' },
+  { id: 'base16/equilibrium-gray-light', name: 'Equilibrium Gray Light' },
+  { id: 'base16/equilibrium-light', name: 'Equilibrium Light' },
+  { id: 'base16/espresso', name: 'Espresso' },
+  { id: 'base16/eva', name: 'Eva' },
+  { id: 'base16/eva-dim', name: 'Eva Dim' },
+  { id: 'base16/flat', name: 'Flat' },
+  { id: 'base16/framer', name: 'Framer' },
+  { id: 'base16/fruit-soda', name: 'Fruit Soda' },
+  { id: 'base16/gigavolt', name: 'Gigavolt' },
+  { id: 'base16/github', name: 'GitHub' },
+  { id: 'base16/google-dark', name: 'Google Dark' },
+  { id: 'base16/google-light', name: 'Google Light' },
+  { id: 'base16/grayscale-dark', name: 'Grayscale Dark' },
+  { id: 'base16/grayscale-light', name: 'Grayscale Light' },
+  { id: 'base16/green-screen', name: 'Green Screen' },
+  { id: 'base16/gruvbox-dark-hard', name: 'Gruvbox Dark Hard' },
+  { id: 'base16/gruvbox-dark-medium', name: 'Gruvbox Dark Medium' },
+  { id: 'base16/gruvbox-dark-pale', name: 'Gruvbox Dark Pale' },
+  { id: 'base16/gruvbox-dark-soft', name: 'Gruvbox Dark Soft' },
+  { id: 'base16/gruvbox-light-hard', name: 'Gruvbox Light Hard' },
+  { id: 'base16/gruvbox-light-medium', name: 'Gruvbox Light Medium' },
+  { id: 'base16/gruvbox-light-soft', name: 'Gruvbox Light Soft' },
+  { id: 'base16/hardcore', name: 'Hardcore' },
+  { id: 'base16/harmonic16-dark', name: 'Harmonic16 Dark' },
+  { id: 'base16/harmonic16-light', name: 'Harmonic16 Light' },
+  { id: 'base16/heetch-dark', name: 'Heetch Dark' },
+  { id: 'base16/heetch-light', name: 'Heetch Light' },
+  { id: 'base16/helios', name: 'Helios' },
+  { id: 'base16/hopscotch', name: 'Hopscotch' },
+  { id: 'base16/horizon-dark', name: 'Horizon Dark' },
+  { id: 'base16/horizon-light', name: 'Horizon Light' },
+  { id: 'base16/humanoid-dark', name: 'Humanoid Dark' },
+  { id: 'base16/humanoid-light', name: 'Humanoid Light' },
+  { id: 'base16/ia-dark', name: 'IA Dark' },
+  { id: 'base16/ia-light', name: 'IA Light' },
+  { id: 'base16/icy-dark', name: 'Icy Dark' },
+  { id: 'base16/ir-black', name: 'IR Black' },
+  { id: 'base16/isotope', name: 'Isotope' },
+  { id: 'base16/kimber', name: 'Kimber' },
+  { id: 'base16/london-tube', name: 'London Tube' },
+  { id: 'base16/macintosh', name: 'Macintosh' },
+  { id: 'base16/marrakesh', name: 'Marrakesh' },
+  { id: 'base16/materia', name: 'Materia' },
+  { id: 'base16/material', name: 'Material' },
+  { id: 'base16/material-darker', name: 'Material Darker' },
+  { id: 'base16/material-lighter', name: 'Material Lighter' },
+  { id: 'base16/material-palenight', name: 'Material Palenight' },
+  { id: 'base16/material-vivid', name: 'Material Vivid' },
+  { id: 'base16/mellow-purple', name: 'Mellow Purple' },
+  { id: 'base16/mexico-light', name: 'Mexico Light' },
+  { id: 'base16/mocha', name: 'Mocha' },
+  { id: 'base16/monokai', name: 'Monokai' },
+  { id: 'base16/nebula', name: 'Nebula' },
+  { id: 'base16/nord', name: 'Nord' },
+  { id: 'base16/nova', name: 'Nova' },
+  { id: 'base16/ocean', name: 'Ocean' },
+  { id: 'base16/oceanicnext', name: 'OceanicNext' },
+  { id: 'base16/one-light', name: 'One Light' },
+  { id: 'base16/onedark', name: 'OneDark' },
+  { id: 'base16/outrun-dark', name: 'Outrun Dark' },
+  { id: 'base16/papercolor-dark', name: 'PaperColor Dark' },
+  { id: 'base16/papercolor-light', name: 'PaperColor Light' },
+  { id: 'base16/paraiso', name: 'Paraiso' },
+  { id: 'base16/pasque', name: 'Pasque' },
+  { id: 'base16/phd', name: 'PhD' },
+  { id: 'base16/pico', name: 'Pico' },
+  { id: 'base16/pop', name: 'Pop' },
+  { id: 'base16/porple', name: 'Porple' },
+  { id: 'base16/qualia', name: 'Qualia' },
+  { id: 'base16/railscasts', name: 'Railscasts' },
+  { id: 'base16/rebecca', name: 'Rebecca' },
+  { id: 'base16/ros-pine', name: 'Ros Pine' },
+  { id: 'base16/ros-pine-dawn', name: 'Ros Pine Dawn' },
+  { id: 'base16/ros-pine-moon', name: 'Ros Pine Moon' },
+  { id: 'base16/sagelight', name: 'Sagelight' },
+  { id: 'base16/sandcastle', name: 'Sandcastle' },
+  { id: 'base16/seti-ui', name: 'Seti UI' },
+  { id: 'base16/shapeshifter', name: 'Shapeshifter' },
+  { id: 'base16/silk-dark', name: 'Silk Dark' },
+  { id: 'base16/silk-light', name: 'Silk Light' },
+  { id: 'base16/snazzy', name: 'Snazzy' },
+  { id: 'base16/solar-flare', name: 'Solar Flare' },
+  { id: 'base16/solar-flare-light', name: 'Solar Flare Light' },
+  { id: 'base16/solarized-dark', name: 'Solarized Dark' },
+  { id: 'base16/solarized-light', name: 'Solarized Light' },
+  { id: 'base16/spacemacs', name: 'Spacemacs' },
+  { id: 'base16/summercamp', name: 'Summercamp' },
+  { id: 'base16/summerfruit-dark', name: 'Summerfruit Dark' },
+  { id: 'base16/summerfruit-light', name: 'Summerfruit Light' },
+  { id: 'base16/synth-midnight-terminal-dark', name: 'Synth Midnight Terminal Dark' },
+  { id: 'base16/synth-midnight-terminal-light', name: 'Synth Midnight Terminal Light' },
+  { id: 'base16/tango', name: 'Tango' },
+  { id: 'base16/tender', name: 'Tender' },
+  { id: 'base16/tomorrow', name: 'Tomorrow' },
+  { id: 'base16/tomorrow-night', name: 'Tomorrow Night' },
+  { id: 'base16/twilight', name: 'Twilight' },
+  { id: 'base16/unikitty-dark', name: 'Unikitty Dark' },
+  { id: 'base16/unikitty-light', name: 'Unikitty Light' },
+  { id: 'base16/vulcan', name: 'Vulcan' },
+  { id: 'base16/windows-10', name: 'Windows 10' },
+  { id: 'base16/windows-10-light', name: 'Windows 10 Light' },
+  { id: 'base16/windows-95', name: 'Windows 95' },
+  { id: 'base16/windows-95-light', name: 'Windows 95 Light' },
+  { id: 'base16/windows-high-contrast', name: 'Windows High Contrast' },
+  { id: 'base16/windows-high-contrast-light', name: 'Windows High Contrast Light' },
+  { id: 'base16/windows-nt', name: 'Windows NT' },
+  { id: 'base16/windows-nt-light', name: 'Windows NT Light' },
+  { id: 'base16/woodland', name: 'Woodland' },
+  { id: 'base16/xcode-dusk', name: 'Xcode Dusk' },
+  { id: 'base16/zenburn', name: 'Zenburn' },
+];
+
+// Combined list for the dropdown (popular first, then divider, then standard, then base16)
+export const codeThemeList: { id: string; name: string; divider?: boolean }[] = [
+  ...popularCodeThemes.map((t) => ({ id: t.id, name: t.name })),
+  { id: '__divider_standard__', name: '--- Standard Themes ---', divider: true },
+  ...standardCodeThemes.map((t) => ({ id: t.id, name: t.name })),
+  { id: '__divider_base16__', name: '--- Base16 Themes ---', divider: true },
+  ...base16CodeThemes.map((t) => ({ id: t.id, name: `Base16: ${t.name}` })),
+];
+
+// For backward compatibility: map old theme IDs to new ones
+export const legacyThemeMap: Record<string, string> = {
+  'atomOneDark': 'atom-one-dark',
+  'atomOneLight': 'atom-one-light',
+  'github': 'github',
+  'monokai': 'monokai',
+  'vs2015': 'vs2015',
+  'xcode': 'xcode',
+  'macAtomOneDark': 'atom-one-dark',
+  'macAtomOneLight': 'atom-one-light',
+  'macGithub': 'github',
+  'macMonokai': 'monokai',
+  'macVs2015': 'vs2015',
+  'macXcode': 'xcode',
+};
+
+// Old codeThemes object kept for backward compat
+// Maps all known theme IDs to CodeThemeDefinition (without css)
+export const codeThemes: Record<string, CodeThemeDefinition> = {};
+for (const list of [standardCodeThemes, base16CodeThemes]) {
+  for (const t of list) {
+    codeThemes[t.id] = t;
+  }
+}
+// Also add legacy keys
+for (const [legacyId, newId] of Object.entries(legacyThemeMap)) {
+  if (!codeThemes[legacyId]) {
+    codeThemes[legacyId] = { id: newId, name: legacyId };
+  }
+}
