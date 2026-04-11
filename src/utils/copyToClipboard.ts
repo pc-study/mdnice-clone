@@ -24,9 +24,8 @@ const STYLE_PROPS = [
   'border-top-left-radius', 'border-top-right-radius',
   'border-bottom-left-radius', 'border-bottom-right-radius',
   'border-collapse', 'border-spacing',
-  'display', 'width', 'max-width', 'min-width',
-  'height', 'max-height', 'min-height',
-  'overflow', 'white-space', 'word-break', 'overflow-wrap',
+  'display', 'max-width',
+  'white-space', 'word-break', 'overflow-wrap',
   'list-style-type', 'list-style-position',
   'vertical-align', 'box-sizing', 'box-shadow', 'opacity',
 ];
@@ -76,6 +75,14 @@ function getDiffStyle(origEl: Element): string {
   const defaults = getDefaultStylesForTag(tag);
   const parts: string[] = [];
 
+  // 预先检查每个方向是否有可见边框（style 不为 none 且 width 不为 0px）
+  const visibleBorder: Record<string, boolean> = {};
+  for (const side of ['top', 'right', 'bottom', 'left']) {
+    const bs = computed.getPropertyValue(`border-${side}-style`);
+    const bw = computed.getPropertyValue(`border-${side}-width`);
+    visibleBorder[side] = !!(bs && bs !== 'none' && bw && bw !== '0px');
+  }
+
   for (const prop of STYLE_PROPS) {
     const val = computed.getPropertyValue(prop);
     if (!val) continue;
@@ -89,6 +96,9 @@ function getDiffStyle(origEl: Element): string {
       }
       // 微信兼容：跳过 background-image（微信不支持渐变/data URL，会报图片错误）
       if (prop === 'background-image') continue;
+      // 跳过无可见边框方向的 border-color 和 border-width（减少冗余）
+      const borderSideMatch = prop.match(/^border-(top|right|bottom|left)-(color|width)$/);
+      if (borderSideMatch && !visibleBorder[borderSideMatch[1]]) continue;
       parts.push(`${prop}:${val}`);
     } else if (INHERITED_PROPS.has(prop)) {
       // 可继承属性即使与 "默认裸元素" 相同，也可能是从主题根继承的值
