@@ -66,6 +66,20 @@
 - [x] 任务 10.3：右键上下文菜单
 - [x] 任务 10.4：性能优化（防抖、缓存）
 
+### 阶段十一：多平台一键发布 ✅
+- [x] 任务 11.1：前端 UI 改造（发布菜单、PublishModal 发布控制台、publishStore 状态管理）
+- [x] 任务 11.2：Web ↔ 扩展通信协议（extensionBridge.ts，PING/PONG 检测、发布请求/进度回传）
+- [x] 任务 11.3：Chrome 扩展骨架（MV3 manifest、content script、background service worker）
+- [x] 任务 11.4：掘金适配器（API 直接调用，Cookie sessionid 鉴权）
+- [x] 任务 11.5：知乎适配器（API 直接调用，Cookie z_c0 + XSRF 鉴权）
+- [x] 任务 11.6：CSDN 适配器（页面上下文注入，绕过 x-ca-signature 签名校验）
+- [x] 任务 11.7：墨天轮适配器（DOM 自动化，UEditor 兼容）
+- [x] 任务 11.8：51CTO 适配器（DOM 自动化，TinyMCE/CodeMirror 兼容）
+- [x] 任务 11.9：ITPUB 适配器（DOM 自动化，Discuz 论坛架构）
+- [x] 任务 11.10：微信公众号适配器（官方 API，AppID + AppSecret，图片上传 + 草稿创建）
+- [x] 任务 11.11：一键获取 Cookie / 检测各平台登录状态
+- [x] 任务 11.12：文章元数据智能提取（标签、摘要、分类、封面图自动生成）
+
 ### 待完善任务
 - 所有任务已完成 ✅
 
@@ -112,3 +126,26 @@
 - 删除确认提示区分文件和文件夹，文件夹提示将删除所有内容
 - 格式菜单新增「TOC 目录」选项，插入 `[TOC]` 标记自动生成目录
 - 新增 editorCommands：insertTOC、insertLinkWithDialog、insertImageWithDialog
+
+### 2026-04-11（多平台一键发布）
+- 阅读并分析《多平台一键自动发文设计方案》
+- 完成前端 UI 改造：MenuBar 新增「发布」菜单、PublishModal 发布控制台弹窗、publishStore 状态管理
+- 新增 extensionBridge.ts：Web 端与浏览器扩展的通信协议（PING/PONG 检测、发布请求、进度回传、Cookie 检测）
+- 新增 Chrome 扩展骨架（MV3）：manifest.json、content.js（消息转发）、background.js（适配器调度）
+- 完成 7 个平台适配器：
+  - 掘金（API 直接调用，Cookie sessionid）
+  - 知乎（API 直接调用，Cookie z_c0 + XSRF Token）
+  - CSDN（页面上下文注入，绕过 x-ca-signature）
+  - 墨天轮（DOM 自动化，UEditor iframe 兼容）
+  - 51CTO（DOM 自动化，TinyMCE/CodeMirror 兼容）
+  - ITPUB（DOM 自动化，Discuz 论坛，不自动提交）
+  - 微信公众号（官方 API，图片上传至素材库 + draft/add 创建草稿）
+- 新增一键获取 Cookie 功能：Background 并行检测 7 个平台的关键 Cookie 登录状态
+- 新增文章元数据智能提取（articleExtractor.ts）：
+  - 标签提取：代码块语言(权重10) > 标题关键词(权重5) > 正文频次(权重1)，100+ 关键词词库
+  - 摘要提取：跳过标题/代码块/图片，取正文前 150 字并清理 Markdown 语法
+  - 分类推断：根据标签投票推断技术领域
+  - 封面图：自动提取文章中第一张图片
+- PublishModal 新增「智能提取」按钮，首次打开自动填充；标签药丸样式展示
+- 所有代码通过 TypeScript 类型检查和 Vite 生产构建
+- 更新所有文档（README.md、DEVELOPMENT.md、AI-HANDOVER.md）

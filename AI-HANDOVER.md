@@ -53,9 +53,11 @@ mdnice-clone/
 ├── src/
 │   ├── components/
 │   │   ├── MenuBar/
-│   │   │   └── MenuBar.tsx     # 顶部菜单栏（文件/格式/主题/功能/查看/设置/帮助）
+│   │   │   └── MenuBar.tsx     # 顶部菜单栏（文件/格式/主题/功能/发布/查看/设置/帮助）
 │   │   ├── ThemeSelector/
 │   │   │   └── ThemeSelector.tsx # 主题选择弹窗（卡片预览/分组/搜索）
+│   │   ├── Publish/
+│   │   │   └── PublishModal.tsx  # 多平台发布控制台弹窗
 │   │   ├── Sidebar/
 │   │   │   └── FileTree.tsx    # 左侧文件管理面板
 │   │   ├── Editor/
@@ -80,13 +82,16 @@ mdnice-clone/
 │   │   ├── markdownParser.ts   # markdown-it 配置 + 特殊语法处理
 │   │   ├── editorCommands.ts   # 编辑器命令（加粗/斜体/插入等）
 │   │   ├── copyToClipboard.ts  # 富文本复制（微信/知乎/掘金）
+│   │   ├── extensionBridge.ts  # Web 端与浏览器扩展通信协议
+│   │   ├── articleExtractor.ts # 文章元数据智能提取（标签/摘要/分类）
 │   │   ├── fileManager.ts      # 文件导入/导出
 │   │   ├── footnotesConverter.ts # 微信外链转脚注
 │   │   └── formatDocument.ts   # 文档格式化（中英文加空格等）
 │   ├── store/
 │   │   ├── editorStore.ts      # 编辑器状态
 │   │   ├── themeStore.ts       # 主题状态
-│   │   └── fileStore.ts        # 文件管理状态
+│   │   ├── fileStore.ts        # 文件管理状态
+│   │   └── publishStore.ts     # 多平台发布状态
 │   ├── hooks/
 │   │   └── useSyncScroll.ts    # 双向同步滚动 Hook
 │   ├── App.tsx                 # 主应用组件（布局 + 状态连接）
@@ -98,6 +103,29 @@ mdnice-clone/
 └── README.md                   # 项目 README
 ```
 
+## 浏览器扩展结构
+
+```
+extension/                       # Chrome Extension MV3
+├── manifest.json                # 扩展清单（permissions: cookies, tabs, scripting）
+├── src/
+│   ├── background.js            # Background Service Worker
+│   │                            #   - 适配器调度（逐个执行发布）
+│   │                            #   - 一键获取 Cookie / 检测登录状态
+│   │                            #   - 进度回传至 Web 页面
+│   ├── content.js               # Content Script
+│   │                            #   - PING/PONG 扩展检测
+│   │                            #   - Web ↔ Background 消息转发
+│   └── adapters/                # 7 个平台适配器
+│       ├── juejin.js            # 掘金（API 直接调用，Cookie sessionid）
+│       ├── zhihu.js             # 知乎（API 直接调用，Cookie z_c0 + XSRF）
+│       ├── csdn.js              # CSDN（页面上下文注入，绕过签名校验）
+│       ├── modb.js              # 墨天轮（DOM 自动化，UEditor 兼容）
+│       ├── c51cto.js            # 51CTO（DOM 自动化，TinyMCE 兼容）
+│       ├── itpub.js             # ITPUB（DOM 自动化，Discuz 论坛）
+│       └── wechat.js            # 微信公众号（官方 API，图片上传 + 草稿创建）
+```
+
 ## 关键架构决策
 
 1. **三栏布局**：CSS Flexbox，中间编辑区和右侧预览区通过可拖拽分割线（state: splitPos 百分比）调整宽度
@@ -107,6 +135,9 @@ mdnice-clone/
 5. **文件管理**：文件树为嵌套结构（FileItem[]），存储在 Zustand store 中，自动持久化到 localStorage
 6. **特殊语法**：通过预处理（容器块、分列）和后处理（注音、图片尺寸）实现，在 renderMarkdown 函数中
 7. **响应式**：窗口宽度 < 768px 时自动隐藏侧边栏，切换为仅编辑器模式
+8. **多平台发布**：采用"纯前端 + 浏览器扩展"混合架构（参考 Wechatsync）。Web 端通过 `window.postMessage` 与扩展通信，扩展 Background Script 调度适配器执行发布。四种适配策略：API 直接调用（掘金/知乎）、页面上下文注入（CSDN）、DOM 自动化（墨天轮/51CTO/ITPUB）、官方 API（微信公众号）
+9. **Cookie 检测**：扩展通过 `chrome.cookies.getAll()` 读取各平台域名下的关键 Cookie 判断登录状态，结果通过 content script 回传至 Web 页面
+10. **智能提取**：纯前端实现，基于 100+ 关键词词库加权匹配提取标签（代码块语言权重10 > 标题5 > 正文1），正文首段提取摘要，标签投票推断分类
 
 ## 状态管理结构
 
@@ -125,6 +156,16 @@ mdnice-clone/
 - `files`: 文件树（FileItem[]，支持嵌套文件夹）
 - `activeFileId`: 当前打开的文件 ID
 - `sidebarVisible`: 侧边栏是否可见
+
+### publishStore
+- `extensionInstalled`: 浏览器扩展是否已安装
+- `platforms`: 各平台配置（PlatformConfig[]，是否启用、默认分类等）
+- `publishModalVisible`: 发布弹窗是否可见
+- `articleMeta`: 文章元数据（标题、标签、分类、摘要、封面图）
+- `publishProgress`: 各平台发布进度（idle/queued/publishing/success/failed）
+- `isPublishing`: 是否正在发布
+- `loginStates`: 各平台登录状态（unknown/checking/logged_in/not_logged_in）
+- `isCheckingLogin`: 是否正在检测登录
 
 ## 常见维护任务
 
@@ -150,6 +191,31 @@ mdnice-clone/
 
 ### 修改菜单项
 - 所有菜单逻辑集中在 `src/components/MenuBar/MenuBar.tsx`
+
+### 添加新的发布平台适配器
+1. 在 `extension/src/adapters/` 中创建新的 `.js` 文件，导出 `publishToXxx(data)` 函数
+2. 在 `extension/src/background.js` 的 `ADAPTERS` 对象中注册新适配器
+3. 在 `src/store/publishStore.ts` 的 `PlatformId` 类型和 `defaultPlatforms` 中添加新平台
+4. 在 `defaultProgress` 和 `defaultLoginStates` 中添加默认状态
+5. 在 `extension/src/background.js` 的 `PLATFORM_COOKIE_CONFIG` 中添加域名和关键 Cookie 配置
+6. 在 `extension/manifest.json` 的 `host_permissions` 中添加新平台域名
+
+### 修改智能提取关键词
+- 关键词词库集中在 `src/utils/articleExtractor.ts`
+- `LANG_KEYWORDS`：编程语言关键词
+- `FRAMEWORK_KEYWORDS`：框架/库关键词
+- `DOMAIN_KEYWORDS`：领域/概念关键词
+- `CATEGORY_HINTS`：标签到分类的映射
+
+### Web ↔ 扩展通信协议
+- 所有消息类型定义在 `src/utils/extensionBridge.ts`
+- 消息通过 `window.postMessage` 传递，content script 转发到 background
+- 消息类型前缀统一为 `MDNICE_`：
+  - `MDNICE_EXTENSION_PING/PONG`：扩展检测
+  - `MDNICE_PUBLISH_REQUEST`：发布请求
+  - `MDNICE_PUBLISH_PROGRESS`：发布进度回传
+  - `MDNICE_CHECK_COOKIES`：Cookie 检测请求
+  - `MDNICE_COOKIES_RESULT`：Cookie 检测结果
 
 ## 部署
 
