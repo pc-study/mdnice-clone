@@ -39,7 +39,7 @@
 1. 组件使用函数式组件 + React Hooks
 2. 文件命名：组件 PascalCase，工具函数 camelCase
 3. 样式：CSS Modules（*.module.css）或内联 style 对象
-4. 状态管理：Zustand store，按领域划分（editor/theme/file）
+4. 状态管理：Zustand store，按领域划分（editor/theme/file/publish）
 5. 类型安全：不使用 `any`（除非与第三方库交互不可避免）
 6. 所有用户可见的文字使用中文
 
@@ -56,10 +56,23 @@
 | 状态管理 | Zustand | 不可更换 |
 | 数据持久化 | localStorage | 不可更换，不引入后端 |
 
-## 六、功能开发优先级
+## 六、浏览器扩展开发规则
+
+1. 扩展代码位于 `extension/` 目录，使用 Chrome Extension MV3 规范
+2. 扩展使用纯 JavaScript（非 TypeScript），不经过 Vite 构建
+3. Web 端与扩展的通信统一通过 `window.postMessage`，消息类型前缀为 `MDNICE_`
+4. 通信协议定义集中在 `src/utils/extensionBridge.ts`
+5. 新增平台适配器时，需同步更新：
+   - `extension/src/adapters/` 新增适配器文件
+   - `extension/src/background.js` 的 `ADAPTERS` 和 `PLATFORM_COOKIE_CONFIG`
+   - `extension/manifest.json` 的 `host_permissions`
+   - `src/store/publishStore.ts` 的 `PlatformId` 类型和 `defaultPlatforms`
+
+## 七、功能开发优先级
 
 按照 docs/PROMPT.md 第十节的开发步骤顺序推进，未完成的任务参见 DEVELOPMENT.md。
+多平台发布功能参见 `docs/mdnice-clone 多平台一键自动发文设计方案.md`。
 
-## 七、验收标准
+## 八、验收标准
 
 所有功能必须通过 docs/PROMPT.md 第十一节列出的验收标准检查。
