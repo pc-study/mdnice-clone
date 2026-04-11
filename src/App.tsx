@@ -9,23 +9,140 @@ import { StatusBar } from './components/StatusBar/StatusBar';
 import { Toast } from './components/common/Toast';
 import { HelpModal } from './components/common/HelpModal';
 import { ThemeSelector } from './components/ThemeSelector/ThemeSelector';
+import { PublishModal } from './components/Publish/PublishModal';
 import { useEditorStore } from './store/editorStore';
 import { useFileStore } from './store/fileStore';
+import { usePublishStore, type PlatformId } from './store/publishStore';
 import { copyAsWechat, copyAsZhihu, copyAsJuejin } from './utils/copyToClipboard';
+import { renderMarkdown } from './utils/markdownParser';
+import { useThemeStore } from './store/themeStore';
+import { themes } from './themes';
+import { detectExtension, sendPublishRequest, onPublishProgress } from './utils/extensionBridge';
 import { useSyncScroll } from './hooks/useSyncScroll';
 
 const App: React.FC = () => {
   const { content, viewMode } = useEditorStore();
-  const { sidebarVisible, setSidebarVisible, activeFileId, updateFileContent } = useFileStore();
+  const { sidebarVisible, setSidebarVisible, activeFileId, updateFileContent, files } = useFileStore();
   const [splitPos, setSplitPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
+
+  const showToast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    setToastVisible(true);
+  }, []);
+
   const [helpModal, setHelpModal] = useState<'markdown' | 'shortcuts' | 'about' | null>(null);
   const [themeSelectorVisible, setThemeSelectorVisible] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const { handleEditorScroll, handlePreviewScroll } = useSyncScroll(editorViewRef, previewRef);
+
+  const {
+    publishModalVisible, setPublishModalVisible,
+    platforms, articleMeta, setArticleMeta,
+    setPublishStatus, resetPublishProgress,
+    setIsPublishing,
+    setExtensionInstalled, extensionInstalled,
+  } = usePublishStore();
+
+  const { currentTheme } = useThemeStore();
+
+  // 检测扩展安装状态
+  useEffect(() => {
+    detectExtension().then(setExtensionInstalled);
+  }, [setExtensionInstalled]);
+
+  // 监听扩展发布进度
+  useEffect(() => {
+    const unsub = onPublishProgress((progress) => {
+      setPublishStatus(progress.platform as PlatformId, {
+        status: progress.status,
+        errorMsg: progress.errorMsg,
+        resultUrl: progress.resultUrl,
+      });
+      // 如果所有平台都完成，结束发布状态
+      const allDone = platforms
+        .filter((p) => p.enabled)
+        .every((p) => {
+          const ps = usePublishStore.getState().publishProgress[p.id];
+          return ps.status === 'success' || ps.status === 'failed';
+        });
+      if (allDone) setIsPublishing(false);
+    });
+    return unsub;
+  }, [platforms, setPublishStatus, setIsPublishing]);
+
+  // 查找文档标题
+  const findDocTitle = (items: typeof files, id: string | null): string => {
+    if (!id) return 'mdnice-clone';
+    for (const f of items) {
+      if (f.id === id) return f.name.replace(/\.md$/, '');
+      if (f.children) {
+        const found = findDocTitle(f.children, id);
+        if (found !== 'mdnice-clone') return found;
+      }
+    }
+    return 'mdnice-clone';
+  };
+  const docTitle = findDocTitle(files, activeFileId);
+
+  // 发布处理
+  const handlePublish = useCallback(() => {
+    const enabledPlatforms = platforms.filter((p) => p.enabled);
+    if (enabledPlatforms.length === 0) return;
+
+    resetPublishProgress();
+    setIsPublishing(true);
+
+    // 设置所有启用平台为排队状态
+    enabledPlatforms.forEach((p) => {
+      setPublishStatus(p.id, { status: 'queued' });
+    });
+
+    // 准备文章数据
+    const html = renderMarkdown(content);
+    const themeCSS = themes[currentTheme]?.css || '';
+    const fullHtml = `<style>${themeCSS}</style><div class="markdown-body">${html}</div>`;
+
+    const title = articleMeta.title || docTitle;
+    setArticleMeta({ title });
+
+    if (extensionInstalled) {
+      // 通过扩展发布
+      sendPublishRequest({
+        title,
+        markdown: content,
+        html: fullHtml,
+        tags: articleMeta.tags ? articleMeta.tags.split(',').map((t) => t.trim()) : [],
+        category: articleMeta.category,
+        coverUrl: articleMeta.coverUrl,
+        platforms: enabledPlatforms.map((p) => p.id),
+      });
+    } else {
+      // 模拟发布进度（扩展未安装时的演示模式）
+      enabledPlatforms.forEach((p, i) => {
+        setTimeout(() => {
+          setPublishStatus(p.id, { status: 'publishing' });
+        }, i * 500);
+        setTimeout(() => {
+          setPublishStatus(p.id, {
+            status: 'failed',
+            errorMsg: '发布助手扩展未安装',
+          });
+          // 检查是否全部完成
+          const allDone = enabledPlatforms.every((_, j) => j <= i);
+          if (allDone && i === enabledPlatforms.length - 1) {
+            setIsPublishing(false);
+          }
+        }, i * 500 + 800);
+      });
+    }
+
+    showToast('开始发布...');
+  }, [platforms, content, currentTheme, articleMeta, docTitle, extensionInstalled,
+    resetPublishProgress, setIsPublishing, setPublishStatus, setArticleMeta, showToast]);
 
   // Responsive: auto-hide sidebar on narrow screens
   useEffect(() => {
@@ -36,11 +153,6 @@ const App: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [setSidebarVisible]);
-
-  const showToast = useCallback((msg: string) => {
-    setToastMsg(msg);
-    setToastVisible(true);
-  }, []);
 
   // Sync editor content changes to the active file in fileStore
   const prevContentRef = useRef(content);
@@ -101,6 +213,7 @@ const App: React.FC = () => {
         onShowThemeSelector={() => setThemeSelectorVisible(true)}
         onToggleSidebar={() => setSidebarVisible(!sidebarVisible)}
         sidebarVisible={sidebarVisible}
+        onShowPublishModal={() => setPublishModalVisible(true)}
       />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Sidebar */}
@@ -162,6 +275,12 @@ const App: React.FC = () => {
       <Toast message={toastMsg} visible={toastVisible} onClose={() => setToastVisible(false)} />
       {helpModal && <HelpModal type={helpModal} onClose={() => setHelpModal(null)} />}
       <ThemeSelector visible={themeSelectorVisible} onClose={() => setThemeSelectorVisible(false)} />
+      <PublishModal
+        visible={publishModalVisible}
+        onClose={() => setPublishModalVisible(false)}
+        onPublish={handlePublish}
+        docTitle={docTitle}
+      />
     </div>
   );
 };

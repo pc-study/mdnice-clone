@@ -12,6 +12,7 @@ import { formatDocument } from '../../utils/formatDocument';
 import { convertLinksToFootnotes } from '../../utils/footnotesConverter';
 import { renderMarkdown } from '../../utils/markdownParser';
 import { themes } from '../../themes';
+import { usePublishStore } from '../../store/publishStore';
 import { EditorView } from '@codemirror/view';
 import {
   wrapSelection,
@@ -36,6 +37,7 @@ interface MenuBarProps {
   onShowThemeSelector?: () => void;
   onToggleSidebar?: () => void;
   sidebarVisible?: boolean;
+  onShowPublishModal?: () => void;
 }
 
 // Icon button style for the left icon group
@@ -49,11 +51,12 @@ const iconBtnStyle: React.CSSProperties = {
 export const MenuBar: React.FC<MenuBarProps> = ({
   onToast, previewRef, editorViewRef,
   onShowMarkdownHelp, onShowShortcuts, onShowAbout, onShowThemeSelector,
-  onToggleSidebar, sidebarVisible,
+  onToggleSidebar, sidebarVisible, onShowPublishModal,
 }) => {
   const { content, setContent, viewMode, setViewMode, fontSize, setFontSize, lineHeight, setLineHeight, wordWrap, setWordWrap } = useEditorStore();
   const { currentTheme, currentCodeTheme, setCurrentCodeTheme, macStyleEnabled, setMacStyleEnabled } = useThemeStore();
   const { addFile, setActiveFileId, activeFileId, updateFileContent, files } = useFileStore();
+  const { extensionInstalled, setPublishModalVisible } = usePublishStore();
 
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
@@ -248,6 +251,31 @@ export const MenuBar: React.FC<MenuBarProps> = ({
     { label: '关于', onClick: () => onShowAbout?.() },
   ];
 
+  const publishItems = [
+    {
+      label: '一键发布草稿',
+      onClick: () => {
+        onShowPublishModal?.();
+      },
+    },
+    {
+      label: '多平台发布配置',
+      onClick: () => {
+        setPublishModalVisible(true);
+        onShowPublishModal?.();
+      },
+    },
+    { divider: true, label: '' },
+    {
+      label: extensionInstalled ? '发布助手扩展: 已连接' : '安装发布助手扩展',
+      onClick: () => {
+        if (!extensionInstalled) {
+          toast('请前往 Chrome 应用商店安装 mdnice-clone 发布助手扩展');
+        }
+      },
+    },
+  ];
+
   return (
     <div style={{
       height: 40, backgroundColor: '#fff', borderBottom: '1px solid #e0e0e0',
@@ -334,6 +362,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
         </div>
         <Dropdown label="样式" items={codeThemeItems} />
         <Dropdown label="功能" items={functionItems} />
+        <Dropdown label="发布" items={publishItems} />
         <Dropdown label="查看" items={viewItems} />
         <Dropdown label="设置" items={settingsItems} />
         <Dropdown label="帮助" items={helpItems} />
