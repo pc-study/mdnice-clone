@@ -283,7 +283,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
       position: 'relative', zIndex: 100,
     }}>
       {/* Left icon group: sidebar toggle + new + theme */}
-      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, gap: 0 }}>
+      <div className="menubar-left-icons" style={{ display: 'flex', alignItems: 'center', flexShrink: 0, gap: 0 }}>
         <button
           onClick={onToggleSidebar}
           style={iconBtnStyle}
@@ -321,7 +321,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
           </svg>
-          <span style={{ fontSize: 12, color: '#666' }}>
+          <span className="menubar-theme-label" style={{ fontSize: 12, color: '#666' }}>
             {themes[currentTheme]?.name || '主题'}
           </span>
           <span style={{ fontSize: 10, color: '#999' }}>▾</span>
@@ -329,10 +329,10 @@ export const MenuBar: React.FC<MenuBarProps> = ({
       </div>
 
       {/* Divider */}
-      <div style={{ width: 1, height: 20, backgroundColor: '#e0e0e0', margin: '0 6px', flexShrink: 0 }} />
+      <div className="menubar-divider-title" style={{ width: 1, height: 20, backgroundColor: '#e0e0e0', margin: '0 6px', flexShrink: 0 }} />
 
       {/* Document title */}
-      <div style={{
+      <div className="menubar-doc-title" style={{
         fontWeight: 600, color: '#333', fontSize: 14, padding: '0 8px',
         whiteSpace: 'nowrap', flexShrink: 0, maxWidth: 200,
         overflow: 'hidden', textOverflow: 'ellipsis',
@@ -341,10 +341,10 @@ export const MenuBar: React.FC<MenuBarProps> = ({
       </div>
 
       {/* Divider */}
-      <div style={{ width: 1, height: 20, backgroundColor: '#e0e0e0', margin: '0 2px', flexShrink: 0 }} />
+      <div className="menubar-divider-title" style={{ width: 1, height: 20, backgroundColor: '#e0e0e0', margin: '0 2px', flexShrink: 0 }} />
 
       {/* Menu items */}
-      <div style={{ display: 'flex', alignItems: 'center', flex: 1, overflow: 'hidden' }}>
+      <div className="menu-items-scroll" style={{ display: 'flex', alignItems: 'center', flex: 1, overflowX: 'auto', overflowY: 'hidden' }}>
         <Dropdown label="文件" items={fileItems} />
         <Dropdown label="格式" items={formatItems} />
         <div style={{ flexShrink: 0 }}>

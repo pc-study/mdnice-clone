@@ -39,3 +39,23 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
+
+/* Menu bar horizontal scroll - hide scrollbar */
+.menu-items-scroll {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.menu-items-scroll::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* Mobile: hide doc title to save space */
+@media (max-width: 768px) {
+  .menubar-doc-title,
+  .menubar-divider-title {
+    display: none !important;
+  }
+  .menubar-left-icons .menubar-theme-label {
+    display: none !important;
+  }
+}
