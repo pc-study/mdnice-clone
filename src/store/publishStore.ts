@@ -27,6 +27,16 @@ export interface PlatformPublishState {
   resultUrl?: string;
 }
 
+/** 单个平台的登录状态 */
+export type LoginStatus = 'unknown' | 'checking' | 'logged_in' | 'not_logged_in';
+
+export interface PlatformLoginState {
+  loginStatus: LoginStatus;
+  userName?: string;
+  cookieCount?: number;
+  error?: string;
+}
+
 /** 文章元数据 */
 export interface ArticleMeta {
   title: string;
@@ -61,6 +71,13 @@ interface PublishState {
   /** 是否正在发布中 */
   isPublishing: boolean;
   setIsPublishing: (v: boolean) => void;
+
+  /** 各平台登录状态 */
+  loginStates: Record<PlatformId, PlatformLoginState>;
+  setLoginState: (id: PlatformId, state: PlatformLoginState) => void;
+  setAllLoginChecking: () => void;
+  isCheckingLogin: boolean;
+  setIsCheckingLogin: (v: boolean) => void;
 }
 
 const STORAGE_KEY = 'mdnice-publish-platforms';
@@ -104,6 +121,16 @@ const defaultProgress: Record<PlatformId, PlatformPublishState> = {
   wechat: { status: 'idle' },
 };
 
+const defaultLoginStates: Record<PlatformId, PlatformLoginState> = {
+  csdn: { loginStatus: 'unknown' },
+  modb: { loginStatus: 'unknown' },
+  juejin: { loginStatus: 'unknown' },
+  zhihu: { loginStatus: 'unknown' },
+  itpub: { loginStatus: 'unknown' },
+  c51cto: { loginStatus: 'unknown' },
+  wechat: { loginStatus: 'unknown' },
+};
+
 export const usePublishStore = create<PublishState>((set, get) => ({
   extensionInstalled: false,
   setExtensionInstalled: (extensionInstalled) => set({ extensionInstalled }),
@@ -140,4 +167,19 @@ export const usePublishStore = create<PublishState>((set, get) => ({
 
   isPublishing: false,
   setIsPublishing: (isPublishing) => set({ isPublishing }),
+
+  loginStates: { ...defaultLoginStates },
+  setLoginState: (id, state) =>
+    set((s) => ({
+      loginStates: { ...s.loginStates, [id]: state },
+    })),
+  setAllLoginChecking: () => {
+    const checking: Record<PlatformId, PlatformLoginState> = {} as Record<PlatformId, PlatformLoginState>;
+    for (const key of Object.keys(defaultLoginStates) as PlatformId[]) {
+      checking[key] = { loginStatus: 'checking' };
+    }
+    set({ loginStates: checking });
+  },
+  isCheckingLogin: false,
+  setIsCheckingLogin: (isCheckingLogin) => set({ isCheckingLogin }),
 }));

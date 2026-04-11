@@ -30,11 +30,26 @@ window.addEventListener('message', (event) => {
     });
     return;
   }
+
+  // Cookie 检测请求：转发到 Background Script
+  if (data?.type === 'MDNICE_CHECK_COOKIES') {
+    chrome.runtime.sendMessage(data, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error('[mdnice-ext] 发送 Cookie 检测请求失败:', chrome.runtime.lastError);
+      } else {
+        console.log('[mdnice-ext] Background 已接收 Cookie 检测请求:', response);
+      }
+    });
+    return;
+  }
 });
 
-// 监听来自 Background 的进度回调
+// 监听来自 Background 的回调
 chrome.runtime.onMessage.addListener((message) => {
   if (message?.type === 'MDNICE_PUBLISH_PROGRESS') {
+    window.postMessage(message, '*');
+  }
+  if (message?.type === 'MDNICE_COOKIES_RESULT') {
     window.postMessage(message, '*');
   }
 });

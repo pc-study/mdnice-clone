@@ -2,7 +2,10 @@ import React from 'react';
 import {
   usePublishStore,
   type PublishStatus,
+  type LoginStatus,
+  type PlatformId,
 } from '../../store/publishStore';
+import { checkPlatformCookies } from '../../utils/extensionBridge';
 
 interface PublishModalProps {
   visible: boolean;
@@ -56,6 +59,14 @@ const statusMap: Record<PublishStatus, { label: string; color: string }> = {
   failed: { label: '失败', color: '#ff4d4f' },
 };
 
+/* ---- 登录状态颜色映射 ---- */
+const loginStatusMap: Record<LoginStatus, { label: string; color: string }> = {
+  unknown: { label: '未检测', color: '#999' },
+  checking: { label: '检测中...', color: '#1890ff' },
+  logged_in: { label: '已登录', color: '#52c41a' },
+  not_logged_in: { label: '未登录', color: '#ff4d4f' },
+};
+
 export const PublishModal: React.FC<PublishModalProps> = ({
   visible, onClose, onPublish, docTitle,
 }) => {
@@ -64,7 +75,34 @@ export const PublishModal: React.FC<PublishModalProps> = ({
     articleMeta, setArticleMeta,
     publishProgress, isPublishing,
     extensionInstalled,
+    loginStates, setLoginState, setAllLoginChecking,
+    isCheckingLogin, setIsCheckingLogin,
   } = usePublishStore();
+
+  // 一键获取 Cookie / 检测登录状态
+  const handleCheckCookies = React.useCallback(async () => {
+    if (!extensionInstalled) return;
+    setIsCheckingLogin(true);
+    setAllLoginChecking();
+    try {
+      const results = await checkPlatformCookies(8000);
+      for (const [id, status] of Object.entries(results)) {
+        setLoginState(id as PlatformId, {
+          loginStatus: status.loggedIn ? 'logged_in' : 'not_logged_in',
+          userName: status.userName,
+          cookieCount: status.cookieCount,
+          error: status.error,
+        });
+      }
+    } catch {
+      // 超时或扩展无响应 - 全部标记为未知
+      platforms.forEach((p) => {
+        setLoginState(p.id, { loginStatus: 'unknown', error: '检测超时' });
+      });
+    } finally {
+      setIsCheckingLogin(false);
+    }
+  }, [extensionInstalled, platforms, setLoginState, setAllLoginChecking, setIsCheckingLogin]);
 
   // 用文档标题初始化
   React.useEffect(() => {
@@ -113,11 +151,67 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                 name={p.name}
                 enabled={p.enabled}
                 status={publishProgress[p.id]?.status || 'idle'}
+                loginStatus={loginStates[p.id]?.loginStatus || 'unknown'}
                 onChange={(v) => togglePlatform(p.id, v)}
                 disabled={isPublishing}
               />
             ))}
           </div>
+
+          {/* 一键获取 Cookie / 登录检测 */}
+          {extensionInstalled && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <div style={sectionTitle}>平台登录状态</div>
+                <button
+                  style={{
+                    ...btnDefault,
+                    padding: '4px 12px',
+                    fontSize: 12,
+                    opacity: isCheckingLogin ? 0.6 : 1,
+                    cursor: isCheckingLogin ? 'not-allowed' : 'pointer',
+                  }}
+                  disabled={isCheckingLogin}
+                  onClick={handleCheckCookies}
+                >
+                  {isCheckingLogin ? '检测中...' : '一键获取 Cookie'}
+                </button>
+              </div>
+              <div style={{
+                border: '1px solid #e0e0e0', borderRadius: 4, overflow: 'hidden',
+              }}>
+                {platforms.map((p) => {
+                  const ls = loginStates[p.id];
+                  const info = loginStatusMap[ls?.loginStatus || 'unknown'];
+                  return (
+                    <div key={p.id} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '6px 14px', borderBottom: '1px solid #f0f0f0', fontSize: 13,
+                    }}>
+                      <span>{p.name}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {ls?.loginStatus === 'checking' && (
+                          <span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid #1890ff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'publish-spin 0.8s linear infinite' }} />
+                        )}
+                        <span style={{
+                          display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                          backgroundColor: info.color,
+                        }} />
+                        <span style={{ color: info.color, fontWeight: 500 }}>{info.label}</span>
+                        {ls?.userName && (
+                          <span style={{ color: '#666', fontSize: 12 }}>({ls.userName})</span>
+                        )}
+                        {ls?.cookieCount !== undefined && ls.loginStatus !== 'unknown' && ls.loginStatus !== 'checking' && (
+                          <span style={{ color: '#bbb', fontSize: 11 }}>{ls.cookieCount} cookies</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <style>{`@keyframes publish-spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          )}
 
           {/* 文章元数据 */}
           <div style={sectionTitle}>文章信息</div>
@@ -222,19 +316,22 @@ interface PlatformToggleProps {
   name: string;
   enabled: boolean;
   status: PublishStatus;
+  loginStatus: LoginStatus;
   onChange: (v: boolean) => void;
   disabled?: boolean;
 }
 
 const PlatformToggle: React.FC<PlatformToggleProps> = ({
-  name, enabled, status, onChange, disabled,
+  name, enabled, status, loginStatus, onChange, disabled,
 }) => {
   const info = statusMap[status];
   const isActive = status !== 'idle';
+  const loginInfo = loginStatusMap[loginStatus];
 
   return (
     <button
       onClick={() => !disabled && onChange(!enabled)}
+      title={loginStatus !== 'unknown' ? `${name}: ${loginInfo.label}` : name}
       style={{
         padding: '6px 14px',
         borderRadius: 16,
@@ -249,10 +346,20 @@ const PlatformToggle: React.FC<PlatformToggleProps> = ({
       }}
     >
       {name}
+      {/* 发布状态指示器 */}
       {isActive && (
         <span style={{
           display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
           backgroundColor: info.color, marginLeft: 6,
+        }} />
+      )}
+      {/* 登录状态角标 */}
+      {!isActive && loginStatus !== 'unknown' && loginStatus !== 'checking' && (
+        <span style={{
+          position: 'absolute', top: -2, right: -2,
+          width: 8, height: 8, borderRadius: '50%',
+          backgroundColor: loginInfo.color,
+          border: '1.5px solid #fff',
         }} />
       )}
     </button>

@@ -35,6 +35,21 @@ export interface ExtensionPingResponse {
   type: 'MDNICE_EXTENSION_PONG';
 }
 
+/** 单个平台的 Cookie 登录状态 */
+export interface PlatformCookieStatus {
+  loggedIn: boolean;
+  cookieCount?: number;
+  userName?: string;
+  keyCookiesFound?: string[];
+  error?: string;
+}
+
+/** Cookie 检测结果 */
+export interface CookiesResultMessage {
+  type: 'MDNICE_COOKIES_RESULT';
+  payload: Record<string, PlatformCookieStatus>;
+}
+
 /**
  * 检测扩展是否已安装
  * 通过发送 PING 并等待 PONG 响应
@@ -83,6 +98,53 @@ export function onPublishProgress(
     if (
       event.source === window &&
       event.data?.type === 'MDNICE_PUBLISH_PROGRESS'
+    ) {
+      callback(event.data.payload);
+    }
+  };
+  window.addEventListener('message', handler);
+  return () => window.removeEventListener('message', handler);
+}
+
+/**
+ * 向扩展发送一键获取 Cookie / 检测登录状态请求
+ * 返回 Promise，resolve 为各平台登录状态
+ */
+export function checkPlatformCookies(
+  timeoutMs = 5000
+): Promise<Record<string, PlatformCookieStatus>> {
+  return new Promise((resolve, reject) => {
+    const handler = (event: MessageEvent) => {
+      if (
+        event.source === window &&
+        event.data?.type === 'MDNICE_COOKIES_RESULT'
+      ) {
+        window.removeEventListener('message', handler);
+        resolve(event.data.payload);
+      }
+    };
+
+    window.addEventListener('message', handler);
+    window.postMessage({ type: 'MDNICE_CHECK_COOKIES' }, '*');
+
+    setTimeout(() => {
+      window.removeEventListener('message', handler);
+      reject(new Error('Cookie 检测超时，请确认扩展已安装'));
+    }, timeoutMs);
+  });
+}
+
+/**
+ * 监听扩展的 Cookie 检测结果（被动监听模式）
+ * 返回取消监听的函数
+ */
+export function onCookiesResult(
+  callback: (result: Record<string, PlatformCookieStatus>) => void
+): () => void {
+  const handler = (event: MessageEvent) => {
+    if (
+      event.source === window &&
+      event.data?.type === 'MDNICE_COOKIES_RESULT'
     ) {
       callback(event.data.payload);
     }
