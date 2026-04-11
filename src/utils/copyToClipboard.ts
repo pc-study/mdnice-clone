@@ -87,6 +87,8 @@ function getDiffStyle(origEl: Element): string {
         if (val === 'flex') { parts.push('display:block'); continue; }
         if (val === 'inline-flex') { parts.push('display:inline-block'); continue; }
       }
+      // 微信兼容：跳过 background-image（微信不支持渐变/data URL，会报图片错误）
+      if (prop === 'background-image') continue;
       parts.push(`${prop}:${val}`);
     } else if (INHERITED_PROPS.has(prop)) {
       // 可继承属性即使与 "默认裸元素" 相同，也可能是从主题根继承的值
@@ -122,25 +124,13 @@ function materializePseudoElements(cloneEl: Element, origEl: Element) {
 
     if (!text && bgImage && bgImage !== 'none') {
       // 模式 A：content:"" + background-image（图标装饰）
-      const urlMatch = bgImage.match(/url\(["']?(.*?)["']?\)/);
-      if (urlMatch && urlMatch[1].startsWith('data:')) {
-        // data URL → <img> 标签
-        node = document.createElement('img');
-        node.setAttribute('src', urlMatch[1]);
-        const w = width && width !== 'auto' ? width : '16px';
-        const h = height && height !== 'auto' ? height : '16px';
-        node.setAttribute('style',
-          `display:inline-block;width:${w};height:${h};vertical-align:middle;margin-right:5px;border:0;`);
-      } else {
-        // gradient 或其他背景 → span with background
-        node = document.createElement('span');
-        const w = width && width !== 'auto' ? width : '16px';
-        const h = height && height !== 'auto' ? height : '16px';
-        node.setAttribute('style',
-          `display:inline-block;width:${w};height:${h};background-image:${bgImage};` +
-          `background-size:${cs.getPropertyValue('background-size') || 'contain'};` +
-          `background-repeat:no-repeat;vertical-align:middle;margin-right:5px;`);
-      }
+      // 微信兼容：不使用 <img> 或 background-image，改为空白占位 span
+      // 因为微信会将 data URL 和渐变背景视为图片并报错
+      node = document.createElement('span');
+      const w = width && width !== 'auto' ? width : '16px';
+      const h = height && height !== 'auto' ? height : '16px';
+      node.setAttribute('style',
+        `display:inline-block;width:${w};height:${h};vertical-align:middle;margin-right:5px;`);
     } else if (!text) {
       // 模式 B：content:"" + 边框/背景色（装饰线）
       // 检查是否有可见边框或背景色
@@ -419,6 +409,18 @@ function inlineStyles(container: Element): string {
   });
   clone.removeAttribute('class');
   clone.removeAttribute(tempAttr);
+
+  // 9. 微信兼容：移除 SVG 元素（微信不支持内联 SVG）
+  clone.querySelectorAll('svg').forEach((svg) => svg.remove());
+
+  // 10. 微信兼容：清理残留的 background-image 样式（防止微信报图片错误）
+  clone.querySelectorAll('*').forEach((el) => {
+    const style = (el as HTMLElement).getAttribute('style');
+    if (style && style.includes('background-image')) {
+      const cleaned = style.replace(/background-image\s*:[^;]+;?/g, '');
+      (el as HTMLElement).setAttribute('style', cleaned);
+    }
+  });
 
   // 清空默认样式缓存
   _defaultCache = null;
