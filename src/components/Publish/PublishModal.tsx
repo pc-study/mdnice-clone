@@ -6,12 +6,14 @@ import {
   type PlatformId,
 } from '../../store/publishStore';
 import { checkPlatformCookies } from '../../utils/extensionBridge';
+import { extractArticleMeta } from '../../utils/articleExtractor';
 
 interface PublishModalProps {
   visible: boolean;
   onClose: () => void;
   onPublish: () => void;
   docTitle: string;
+  markdown: string;
 }
 
 /* ---- 样式常量 ---- */
@@ -68,7 +70,7 @@ const loginStatusMap: Record<LoginStatus, { label: string; color: string }> = {
 };
 
 export const PublishModal: React.FC<PublishModalProps> = ({
-  visible, onClose, onPublish, docTitle,
+  visible, onClose, onPublish, docTitle, markdown,
 }) => {
   const {
     platforms, togglePlatform,
@@ -104,12 +106,36 @@ export const PublishModal: React.FC<PublishModalProps> = ({
     }
   }, [extensionInstalled, platforms, setLoginState, setAllLoginChecking, setIsCheckingLogin]);
 
-  // 用文档标题初始化
+  // 智能提取文章元数据
+  const handleAutoExtract = React.useCallback(() => {
+    if (!markdown) return;
+    const extracted = extractArticleMeta(markdown, docTitle);
+    setArticleMeta({
+      tags: extracted.tags.join(','),
+      summary: extracted.summary,
+      category: extracted.category || articleMeta.category,
+      coverUrl: extracted.coverUrl || articleMeta.coverUrl,
+    });
+  }, [markdown, docTitle, articleMeta.category, articleMeta.coverUrl, setArticleMeta]);
+
+  // 打开弹窗时自动提取
   React.useEffect(() => {
-    if (visible && !articleMeta.title) {
-      setArticleMeta({ title: docTitle });
+    if (visible) {
+      if (!articleMeta.title) {
+        setArticleMeta({ title: docTitle });
+      }
+      // 首次打开且标签为空时自动提取
+      if (!articleMeta.tags && !articleMeta.summary && markdown) {
+        const extracted = extractArticleMeta(markdown, docTitle);
+        setArticleMeta({
+          tags: extracted.tags.join(','),
+          summary: extracted.summary,
+          category: extracted.category,
+          coverUrl: extracted.coverUrl || articleMeta.coverUrl,
+        });
+      }
     }
-  }, [visible, docTitle, articleMeta.title, setArticleMeta]);
+  }, [visible, docTitle, markdown, articleMeta.title, articleMeta.tags, articleMeta.summary, articleMeta.coverUrl, setArticleMeta]);
 
   if (!visible) return null;
 
@@ -214,7 +240,21 @@ export const PublishModal: React.FC<PublishModalProps> = ({
           )}
 
           {/* 文章元数据 */}
-          <div style={sectionTitle}>文章信息</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div style={sectionTitle}>文章信息</div>
+            <button
+              style={{
+                ...btnDefault,
+                padding: '4px 12px',
+                fontSize: 12,
+              }}
+              onClick={handleAutoExtract}
+              disabled={isPublishing || !markdown}
+              title="根据文章内容自动提取标签、摘要和分类"
+            >
+              智能提取
+            </button>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
             <input
               style={inputStyle}
@@ -223,11 +263,37 @@ export const PublishModal: React.FC<PublishModalProps> = ({
               onChange={(e) => setArticleMeta({ title: e.target.value })}
               disabled={isPublishing}
             />
-            <input
-              style={inputStyle}
-              placeholder="标签（逗号分隔，如：前端,React,Markdown）"
-              value={articleMeta.tags}
-              onChange={(e) => setArticleMeta({ tags: e.target.value })}
+            <div style={{ position: 'relative' }}>
+              <input
+                style={inputStyle}
+                placeholder="标签（逗号分隔，如：前端,React,Markdown）"
+                value={articleMeta.tags}
+                onChange={(e) => setArticleMeta({ tags: e.target.value })}
+                disabled={isPublishing}
+              />
+              {articleMeta.tags && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                  {articleMeta.tags.split(',').filter(Boolean).map((tag, i) => (
+                    <span key={i} style={{
+                      padding: '2px 8px', backgroundColor: '#f0faf5', color: '#35b378',
+                      borderRadius: 10, fontSize: 11, border: '1px solid #d4edda',
+                    }}>
+                      {tag.trim()}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <textarea
+              style={{
+                ...inputStyle,
+                minHeight: 60,
+                resize: 'vertical',
+                fontFamily: 'inherit',
+              }}
+              placeholder="文章摘要（自动提取或手动填写，部分平台必填）"
+              value={articleMeta.summary}
+              onChange={(e) => setArticleMeta({ summary: e.target.value })}
               disabled={isPublishing}
             />
             <div style={{ display: 'flex', gap: 10 }}>

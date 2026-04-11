@@ -117,6 +117,7 @@ const App: React.FC = () => {
         html: fullHtml,
         tags: articleMeta.tags ? articleMeta.tags.split(',').map((t) => t.trim()) : [],
         category: articleMeta.category,
+        summary: articleMeta.summary,
         coverUrl: articleMeta.coverUrl,
         platforms: enabledPlatforms.map((p) => p.id),
       });
@@ -280,6 +281,7 @@ const App: React.FC = () => {
         onClose={() => setPublishModalVisible(false)}
         onPublish={handlePublish}
         docTitle={docTitle}
+        markdown={content}
       />
     </div>
   );

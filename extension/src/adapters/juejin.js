@@ -49,7 +49,7 @@ async function createDraft(cookieStr, data) {
       link_url: '',
       cover_image: data.coverUrl || '',
       title: data.title,
-      brief_content: '',
+      brief_content: data.summary || '',
       edit_type: 10, // 10 = Markdown
       html_content: 'deprecated',
       mark_content: data.markdown,

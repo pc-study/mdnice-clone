@@ -42,6 +42,7 @@ export interface ArticleMeta {
   title: string;
   tags: string;
   category: string;
+  summary: string;
   coverUrl: string;
 }
 
@@ -154,7 +155,7 @@ export const usePublishStore = create<PublishState>((set, get) => ({
   publishModalVisible: false,
   setPublishModalVisible: (publishModalVisible) => set({ publishModalVisible }),
 
-  articleMeta: { title: '', tags: '', category: '', coverUrl: '' },
+  articleMeta: { title: '', tags: '', category: '', summary: '', coverUrl: '' },
   setArticleMeta: (patch) =>
     set((s) => ({ articleMeta: { ...s.articleMeta, ...patch } })),
 

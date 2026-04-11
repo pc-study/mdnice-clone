@@ -14,6 +14,7 @@ export interface PublishMessage {
     html: string;
     tags: string[];
     category: string;
+    summary: string;
     coverUrl: string;
     platforms: string[];
   };
