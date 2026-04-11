@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "mdnice-clone 发布助手",
+  "version": "1.0.0",
+  "description": "mdnice-clone 多平台一键自动发文浏览器扩展",
+  "permissions": [
+    "cookies",
+    "tabs",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://api.juejin.cn/*",
+    "https://zhuanlan.zhihu.com/*",
+    "https://editor.csdn.net/*",
+    "https://www.modb.pro/*",
+    "https://blog.51cto.com/*",
+    "https://www.itpub.net/*",
+    "https://mp.weixin.qq.com/*",
+    "https://api.weixin.qq.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "src/icons/icon16.png",
+    "48": "src/icons/icon48.png",
+    "128": "src/icons/icon128.png"
+  }
+}
